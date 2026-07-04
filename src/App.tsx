@@ -1,5 +1,11 @@
+import { AuthProvider } from "./providers/AuthProvider";
+
 function App() {
-  return <></>;
+  return (
+    <AuthProvider>
+      <></>
+    </AuthProvider>
+  );
 }
 
 export default App;

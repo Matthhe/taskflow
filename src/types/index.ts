@@ -11,6 +11,10 @@ export interface IBoard {
   created_at: string;
 }
 
+export interface IBoardWithRole extends IBoard {
+  role: "owner" | "member";
+}
+
 export interface IColumn {
   id: string;
   board_id: string;

@@ -85,8 +85,8 @@ const Board = () => {
 
       setColumns(formattedColumns);
     } catch (err: any) {
-      console.error("Ошибка загрузки данных доски:", err);
-      setError(err.message || "Не удалось загрузить доску");
+      console.error("Error loading board data:", err);
+      setError(err.message || "Failed to load the board");
     } finally {
       setLoading(false);
     }

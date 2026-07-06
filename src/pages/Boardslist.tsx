@@ -50,7 +50,15 @@ const BoardsList = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
-      <AppBar position="static" elevation={0} sx={{ bgcolor: "background.paper", color: "text.primary", borderBottom: "1px solid #e0e0e0" }}>
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{
+          bgcolor: "background.paper",
+          color: "text.primary",
+          borderBottom: "1px solid #e0e0e0",
+        }}
+      >
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
             TaskFlow
@@ -58,7 +66,11 @@ const BoardsList = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
             {user?.email}
           </Typography>
-          <Button startIcon={<LogoutIcon />} onClick={() => signOut()} sx={{ textTransform: "none" }}>
+          <Button
+            startIcon={<LogoutIcon />}
+            onClick={() => signOut()}
+            sx={{ textTransform: "none" }}
+          >
             Log out
           </Button>
         </Toolbar>
@@ -69,7 +81,11 @@ const BoardsList = () => {
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
             My boards
           </Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setDialogOpen(true)}
+          >
             Create board
           </Button>
         </Box>
@@ -83,7 +99,9 @@ const BoardsList = () => {
         {isError && <Alert severity="error">Failed to load boards</Alert>}
 
         {!isLoading && !isError && boards.length === 0 && (
-          <Typography color="text.secondary">There are no boards yet - create the first one.</Typography>
+          <Typography color="text.secondary">
+            There are no boards yet - create the first one.
+          </Typography>
         )}
 
         <Grid container spacing={2}>
@@ -91,12 +109,21 @@ const BoardsList = () => {
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={board.id}>
               <Card variant="outlined" sx={{ borderRadius: 2 }}>
                 <CardActionArea onClick={() => navigate(`/board/${board.id}`)}>
-                  <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <CardContent
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {board.title}
                     </Typography>
                     {board.role === "owner" && (
-                      <IconButton size="small" onClick={(e) => handleDelete(e, board.id)}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleDelete(e, board.id)}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     )}
@@ -108,7 +135,12 @@ const BoardsList = () => {
         </Grid>
       </Container>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="xs">
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
         <DialogTitle sx={{ fontWeight: 600 }}>New boards</DialogTitle>
         <DialogContent>
           <TextField
@@ -122,7 +154,11 @@ const BoardsList = () => {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleCreate} disabled={createBoard.isPending}>
+          <Button
+            variant="contained"
+            onClick={handleCreate}
+            disabled={createBoard.isPending}
+          >
             Create
           </Button>
         </DialogActions>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -13,8 +14,9 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Alert,
 } from "@mui/material";
-import DashboardIcon from "@mui/icons-material/Dashboard";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -22,85 +24,93 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../services/supabase";
 import ColumnDialog from "../components/ColumnDialog";
 import TaskDialog from "../components/TaskDialog";
+import type { ITask, IColumn } from "../types";
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: string;
-  column_id: string;
-}
-
-interface Column {
-  id: string;
-  title: string;
-  tasks: Task[];
+interface ColumnWithTasks extends IColumn {
+  tasks: ITask[];
 }
 
 const Board = () => {
+  const { boardId } = useParams<{ boardId: string }>();
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
-  const [columns, setColumns] = useState<Column[]>([]);
+  const [boardTitle, setBoardTitle] = useState<string>("");
+  const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
 
   const fetchBoardData = async () => {
+    if (!boardId) return;
     try {
       setLoading(true);
+      setError(null);
+
+      const { data: boardData, error: boardError } = await supabase
+        .from("boards")
+        .select("title")
+        .eq("id", boardId)
+        .single();
+      if (boardError) throw boardError;
+      setBoardTitle(boardData.title);
 
       const { data: colsData, error: colsError } = await supabase
         .from("columns")
         .select("*")
-        .eq("user_id", user?.id)
-        .order("created_at", { ascending: true });
-
+        .eq("board_id", boardId)
+        .order("position", { ascending: true });
       if (colsError) throw colsError;
 
-      const { data: tasksData, error: tasksError } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user?.id);
+      const columnIds = (colsData || []).map((c) => c.id);
 
+      const { data: tasksData, error: tasksError } = columnIds.length
+        ? await supabase
+            .from("tasks")
+            .select("*")
+            .in("column_id", columnIds)
+            .order("position", { ascending: true })
+        : { data: [], error: null };
       if (tasksError) throw tasksError;
 
-      const formattedColumns = (colsData || []).map((col: any) => ({
-        id: col.id,
-        title: col.title,
-        tasks: (tasksData || []).filter(
-          (task: any) => task.column_id === col.id,
-        ),
-      }));
+      const formattedColumns: ColumnWithTasks[] = (colsData || []).map(
+        (col) => ({
+          ...col,
+          tasks: (tasksData || []).filter((task) => task.column_id === col.id),
+        }),
+      );
 
       setColumns(formattedColumns);
-    } catch (error) {
-      console.error("Ошибка загрузки данных доски:", error);
+    } catch (err: any) {
+      console.error("Ошибка загрузки данных доски:", err);
+      setError(err.message || "Не удалось загрузить доску");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && boardId) {
       fetchBoardData();
     }
-  }, [user]);
+  }, [user, boardId]);
 
   const handleCreateColumn = async (title: string) => {
+    if (!boardId) return;
     try {
       const { data, error } = await supabase
         .from("columns")
-        .insert([{ title, user_id: user?.id }])
+        .insert([{ title, board_id: boardId, position: columns.length }])
         .select()
         .single();
-
       if (error) throw error;
 
-      setColumns([...columns, { id: data.id, title: data.title, tasks: [] }]);
-    } catch (error) {
-      console.error("Failed to create the column:", error);
+      setColumns([...columns, { ...data, tasks: [] }]);
+    } catch (err) {
+      console.error("Failed to create column:", err);
     }
   };
 
@@ -109,8 +119,11 @@ const Board = () => {
     description: string,
     priority: string,
   ) => {
-    if (!activeColumnId) return;
+    if (!activeColumnId || !user) return;
     try {
+      const column = columns.find((c) => c.id === activeColumnId);
+      const position = column ? column.tasks.length : 0;
+
       const { data, error } = await supabase
         .from("tasks")
         .insert([
@@ -119,24 +132,23 @@ const Board = () => {
             description,
             priority,
             column_id: activeColumnId,
-            user_id: user?.id,
+            created_by: user.id,
+            position,
           },
         ])
         .select()
         .single();
-
       if (error) throw error;
 
       setColumns(
-        columns.map((col) => {
-          if (col.id === activeColumnId) {
-            return { ...col, tasks: [...col.tasks, data] };
-          }
-          return col;
-        }),
+        columns.map((col) =>
+          col.id === activeColumnId
+            ? { ...col, tasks: [...col.tasks, data] }
+            : col,
+        ),
       );
-    } catch (error) {
-      console.error("Не удалось создать задачу:", error);
+    } catch (err) {
+      console.error("Falied to create task:", err);
     }
   };
 
@@ -172,20 +184,11 @@ const Board = () => {
         }}
       >
         <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <DashboardIcon color="primary" />
+          <IconButton edge="start" onClick={() => navigate("/")} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
           </IconButton>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, fontWeight: 700 }}
-          >
-            TaskFlow
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+            {boardTitle || "TaskFlow"}
           </Typography>
           <Typography
             variant="body2"
@@ -200,7 +203,6 @@ const Board = () => {
             size="small"
             startIcon={<LogoutIcon />}
             onClick={() => signOut()}
-            sx={{ textTransform: "none", fontWeight: 600 }}
           >
             Log out
           </Button>
@@ -208,22 +210,17 @@ const Board = () => {
       </AppBar>
 
       <Container maxWidth="xl" sx={{ mt: 4 }}>
-        <Box
-          sx={{
-            mb: 3,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
-            Workspace
-          </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setIsColumnDialogOpen(true)}
-            sx={{ textTransform: "none", fontWeight: 600 }}
           >
             Add column
           </Button>
@@ -281,9 +278,9 @@ const Board = () => {
                             label={task.priority}
                             size="small"
                             color={
-                              task.priority === "High"
+                              task.priority === "high"
                                 ? "error"
-                                : task.priority === "Medium"
+                                : task.priority === "medium"
                                   ? "warning"
                                   : "default"
                             }

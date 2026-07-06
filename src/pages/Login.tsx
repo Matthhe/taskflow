@@ -114,7 +114,7 @@ const Login = () => {
               disabled={isSubmitting}
               sx={{ mt: 1, textTransform: "none", fontWeight: "600" }}
             >
-              {isSubmitting ? "Вход..." : "Войти"}
+              {isSubmitting ? "Entering..." : "Enter"}
             </Button>
 
             <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>

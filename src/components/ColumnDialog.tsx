@@ -14,7 +14,11 @@ interface ColumnDialogProps {
   onSave: (title: string) => Promise<void>;
 }
 
-const ColumnDialog: React.FC<ColumnDialogProps> = ({ open, onClose, onSave }) => {
+const ColumnDialog: React.FC<ColumnDialogProps> = ({
+  open,
+  onClose,
+  onSave,
+}) => {
   const [title, setTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -57,7 +61,12 @@ const ColumnDialog: React.FC<ColumnDialogProps> = ({ open, onClose, onSave }) =>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={handleClose} color="inherit" disabled={isSaving} sx={{ textTransform: "none" }}>
+        <Button
+          onClick={handleClose}
+          color="inherit"
+          disabled={isSaving}
+          sx={{ textTransform: "none" }}
+        >
           Cancel
         </Button>
         <Button

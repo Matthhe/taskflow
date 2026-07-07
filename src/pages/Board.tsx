@@ -8,18 +8,25 @@ import {
   Toolbar,
   Button,
   IconButton,
-  Grid,
-  Paper,
-  Card,
-  CardContent,
-  Chip,
   CircularProgress,
   Alert,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
 
+import {
+  DndContext,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+
+import Column from "../components/board/Column";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../services/supabase";
 import ColumnDialog from "../components/ColumnDialog";
@@ -43,6 +50,12 @@ const Board = () => {
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+  );
 
   const fetchBoardData = async () => {
     if (!boardId) return;
@@ -148,13 +161,123 @@ const Board = () => {
         ),
       );
     } catch (err) {
-      console.error("Falied to create task:", err);
+      console.error("Failed to create task:", err);
     }
   };
 
   const handleOpenTaskDialog = (columnId: string) => {
     setActiveColumnId(columnId);
     setIsTaskDialogOpen(true);
+  };
+
+  const handleTaskClick = (task: ITask) => {
+    console.log("Task clicked:", task);
+  };
+
+  const findColumnByTaskId = (taskId: string) => {
+    return columns.find((col) => col.tasks.some((task) => task.id === taskId));
+  };
+
+  const updateTasksOrderInDb = async (
+    columnId: string,
+    updatedTasks: ITask[],
+  ) => {
+    const promises = updatedTasks.map((task, index) =>
+      supabase
+        .from("tasks")
+        .update({ position: index, column_id: columnId })
+        .eq("id", task.id),
+    );
+    await Promise.all(promises);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    const activeCol = findColumnByTaskId(activeId);
+    const overCol =
+      columns.find((col) => col.id === overId) || findColumnByTaskId(overId);
+
+    if (!activeCol || !overCol || activeCol.id === overCol.id) return;
+
+    setColumns((prevCols) => {
+      return prevCols.map((col) => {
+        if (col.id === activeCol.id) {
+          return { ...col, tasks: col.tasks.filter((t) => t.id !== activeId) };
+        }
+        if (col.id === overCol.id) {
+          const activeTask = activeCol.tasks.find((t) => t.id === activeId);
+          if (!activeTask) return col;
+
+          const overIndex = col.tasks.findIndex((t) => t.id === overId);
+          const newIndex = overIndex >= 0 ? overIndex : col.tasks.length;
+
+          const updatedTask = { ...activeTask, column_id: overCol.id };
+          const newTasks = [...col.tasks];
+          newTasks.splice(newIndex, 0, updatedTask);
+
+          return { ...col, tasks: newTasks };
+        }
+        return col;
+      });
+    });
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    const activeCol = findColumnByTaskId(activeId);
+    const overCol =
+      columns.find((col) => col.id === overId) || findColumnByTaskId(overId);
+
+    if (!activeCol || !overCol) return;
+
+    if (activeCol.id === overCol.id) {
+      const activeIndex = activeCol.tasks.findIndex((t) => t.id === activeId);
+      const overIndex = activeCol.tasks.findIndex((t) => t.id === overId);
+
+      if (activeIndex !== overIndex) {
+        const reorderedTasks = arrayMove(
+          activeCol.tasks,
+          activeIndex,
+          overIndex,
+        );
+
+        setColumns((prev) =>
+          prev.map((col) =>
+            col.id === activeCol.id ? { ...col, tasks: reorderedTasks } : col,
+          ),
+        );
+
+        try {
+          await updateTasksOrderInDb(activeCol.id, reorderedTasks);
+        } catch (err) {
+          console.error("Failed to save tasks order:", err);
+        }
+      }
+    } else {
+      try {
+        const finalActiveCol = columns.find((c) => c.id === activeCol.id);
+        const finalOverCol = columns.find((c) => c.id === overCol.id);
+
+        if (finalActiveCol && finalOverCol) {
+          await Promise.all([
+            updateTasksOrderInDb(finalActiveCol.id, finalActiveCol.tasks),
+            updateTasksOrderInDb(finalOverCol.id, finalOverCol.tasks),
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to save cross-column tasks order:", err);
+      }
+    }
   };
 
   if (loading) {
@@ -226,101 +349,42 @@ const Board = () => {
           </Button>
         </Box>
 
-        <Grid container spacing={3}>
-          {columns.map((column) => (
-            <Grid size={{ xs: 12, md: 4 }} key={column.id}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  bgcolor: "#eceff1",
-                  borderRadius: 2,
-                  minHeight: "70vh",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 600, px: 1 }}>
-                    {column.title}
-                  </Typography>
-                  <Chip
-                    label={column.tasks.length}
-                    size="small"
-                    sx={{ fontWeight: 600 }}
-                  />
-                </Box>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              overflowX: "auto",
+              pb: 2,
+              "&::-webkit-scrollbar": { height: "8px" },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "rgba(0,0,0,0.1)",
+                borderRadius: "4px",
+              },
+            }}
+          >
+            <Grid container spacing={3} wrap="nowrap">
+              {columns.map((column) => {
+                const { tasks, ...columnData } = column;
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1.5,
-                    flexGrow: 1,
-                  }}
-                >
-                  {column.tasks.map((task) => (
-                    <Card
-                      key={task.id}
-                      elevation={0}
-                      sx={{ borderRadius: 1.5, border: "1px solid #e0e0e0" }}
-                    >
-                      <CardContent sx={{ "&:last-child": { pb: 2 }, p: 2 }}>
-                        <Box sx={{ mb: 1 }}>
-                          <Chip
-                            label={task.priority}
-                            size="small"
-                            color={
-                              task.priority === "high"
-                                ? "error"
-                                : task.priority === "medium"
-                                  ? "warning"
-                                  : "default"
-                            }
-                            sx={{
-                              height: 20,
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                            }}
-                          />
-                        </Box>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}
-                        >
-                          {task.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {task.description}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-
-                <Button
-                  fullWidth
-                  startIcon={<AddIcon />}
-                  onClick={() => handleOpenTaskDialog(column.id)}
-                  sx={{
-                    justifyContent: "flex-start",
-                    color: "text.secondary",
-                    textTransform: "none",
-                  }}
-                >
-                  Add task
-                </Button>
-              </Paper>
+                return (
+                  <Grid key={column.id}>
+                    <Column
+                      column={columnData}
+                      tasks={tasks}
+                      onAddTask={handleOpenTaskDialog}
+                      onTaskClick={handleTaskClick}
+                    />
+                  </Grid>
+                );
+              })}
             </Grid>
-          ))}
-        </Grid>
+          </Box>
+        </DndContext>
       </Container>
 
       <ColumnDialog

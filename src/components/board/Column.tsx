@@ -6,8 +6,16 @@ import {
 } from "@dnd-kit/sortable";
 import TaskCard from "./TaskCard";
 import { type IColumn, type ITask } from "../../types";
-import { Box, Typography, Button, Paper, TextField } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  TextField,
+  IconButton,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface ColumnProps {
   column: IColumn;
@@ -16,6 +24,7 @@ interface ColumnProps {
   onTaskClick?: (task: ITask) => void;
   onDeleteTask?: (taskId: string) => void;
   onRenameColumn?: (columnId: string, newTitle: string) => void;
+  onDeleteColumn?: (columnId: string) => void;
 }
 
 const Column: React.FC<ColumnProps> = ({
@@ -25,6 +34,7 @@ const Column: React.FC<ColumnProps> = ({
   onTaskClick,
   onDeleteTask,
   onRenameColumn,
+  onDeleteColumn,
 }) => {
   const { setNodeRef } = useDroppable({ id: column.id });
 
@@ -58,6 +68,11 @@ const Column: React.FC<ColumnProps> = ({
       cancelEdit();
     }
   };
+  const handleDeleteClick = () => {
+    if (confirm(`Delete column "${column.title}" and all its tasks?`)) {
+      onDeleteColumn?.(column.id);
+    }
+  };
 
   return (
     <Box
@@ -81,19 +96,30 @@ const Column: React.FC<ColumnProps> = ({
           sx={{ mb: 2 }}
         />
       ) : (
-        <Typography
-          variant="h6"
-          onClick={startEditing}
+        <Box
           sx={{
-            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             mb: 2,
             px: 0.5,
-            cursor: "pointer",
-            "&:hover": { opacity: 0.7 },
           }}
         >
-          {column.title} ({tasks.length})
-        </Typography>
+          <Typography
+            variant="h6"
+            onClick={startEditing}
+            sx={{
+              fontWeight: 700,
+              cursor: "pointer",
+              "&:hover": { opacity: 0.7 },
+            }}
+          >
+            {column.title} ({tasks.length})
+          </Typography>
+          <IconButton size="small" onClick={handleDeleteClick}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
       )}
 
       <Paper

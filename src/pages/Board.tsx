@@ -196,6 +196,19 @@ const Board = () => {
       console.error("Failed to rename column:", err);
     }
   };
+  const handleDeleteColumn = async (columnId: string) => {
+    try {
+      const { error } = await supabase
+        .from("columns")
+        .delete()
+        .eq("id", columnId);
+      if (error) throw error;
+
+      setColumns((prev) => prev.filter((col) => col.id !== columnId));
+    } catch (err) {
+      console.error("Failed to delete column:", err);
+    }
+  };
 
   const handleOpenTaskDialog = (columnId: string) => {
     setActiveColumnId(columnId);
@@ -404,7 +417,7 @@ const Board = () => {
                 const { tasks, ...columnData } = column;
 
                 return (
-                  <Grid key={column.id}>
+                  <Grid key={column.id} sx={{ flexShrink: 0 }}>
                     <Column
                       column={columnData}
                       tasks={tasks}
@@ -412,6 +425,7 @@ const Board = () => {
                       onTaskClick={handleTaskClick}
                       onDeleteTask={handleDeleteTask}
                       onRenameColumn={handleRenameColumn}
+                      onDeleteColumn={handleDeleteColumn}
                     />
                   </Grid>
                 );

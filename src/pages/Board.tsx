@@ -23,7 +23,11 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import type { DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 
 import Column from "../components/board/Column";
@@ -50,6 +54,10 @@ const Board = () => {
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+
+  const [dragSourceColumnId, setDragSourceColumnId] = useState<string | null>(
+    null,
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -219,6 +227,12 @@ const Board = () => {
     console.log("Task clicked:", task);
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const activeId = event.active.id as string;
+    const col = findColumnByTaskId(activeId);
+    setDragSourceColumnId(col ? col.id : null);
+  };
+
   const findColumnByTaskId = (taskId: string) => {
     return columns.find((col) => col.tasks.some((task) => task.id === taskId));
   };
@@ -274,7 +288,10 @@ const Board = () => {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    const sourceColumnId = dragSourceColumnId;
+    setDragSourceColumnId(null);
+
+    if (!over || !sourceColumnId) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
@@ -285,40 +302,38 @@ const Board = () => {
 
     if (!activeCol || !overCol) return;
 
-    if (activeCol.id === overCol.id) {
+    if (sourceColumnId === overCol.id) {
       const activeIndex = activeCol.tasks.findIndex((t) => t.id === activeId);
       const overIndex = activeCol.tasks.findIndex((t) => t.id === overId);
 
-      if (activeIndex !== overIndex) {
-        const reorderedTasks = arrayMove(
-          activeCol.tasks,
-          activeIndex,
-          overIndex,
-        );
-
+      let finalTasks = activeCol.tasks;
+      if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+        finalTasks = arrayMove(activeCol.tasks, activeIndex, overIndex);
         setColumns((prev) =>
           prev.map((col) =>
-            col.id === activeCol.id ? { ...col, tasks: reorderedTasks } : col,
+            col.id === activeCol.id ? { ...col, tasks: finalTasks } : col,
           ),
         );
+      }
 
-        try {
-          await updateTasksOrderInDb(activeCol.id, reorderedTasks);
-        } catch (err) {
-          console.error("Failed to save tasks order:", err);
-        }
+      try {
+        await updateTasksOrderInDb(activeCol.id, finalTasks);
+      } catch (err) {
+        console.error("Failed to save tasks order:", err);
       }
     } else {
-      try {
-        const finalActiveCol = columns.find((c) => c.id === activeCol.id);
-        const finalOverCol = columns.find((c) => c.id === overCol.id);
+      const finalSourceCol = columns.find((c) => c.id === sourceColumnId);
+      const finalTargetCol = columns.find((c) => c.id === overCol.id);
 
-        if (finalActiveCol && finalOverCol) {
-          await Promise.all([
-            updateTasksOrderInDb(finalActiveCol.id, finalActiveCol.tasks),
-            updateTasksOrderInDb(finalOverCol.id, finalOverCol.tasks),
-          ]);
-        }
+      try {
+        await Promise.all([
+          finalSourceCol
+            ? updateTasksOrderInDb(finalSourceCol.id, finalSourceCol.tasks)
+            : Promise.resolve(),
+          finalTargetCol
+            ? updateTasksOrderInDb(finalTargetCol.id, finalTargetCol.tasks)
+            : Promise.resolve(),
+        ]);
       } catch (err) {
         console.error("Failed to save cross-column tasks order:", err);
       }
@@ -398,6 +413,7 @@ const Board = () => {
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragOver={handleDragOver}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
           <Box

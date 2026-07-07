@@ -4,9 +4,9 @@ import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, Typography, Chip, Box } from "@mui/material";
 import type { ITask } from "../../types";
 
-interface TaskCardProps{
-    task: ITask;
-    onClick?: (task: ITask) => void;
+interface TaskCardProps {
+  task: ITask;
+  onClick?: (task: ITask) => void;
 }
 
 const priorityColor = (priority: string) => {
@@ -16,16 +16,16 @@ const priorityColor = (priority: string) => {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
-    const{
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({id: task.id})
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
 
-    const style: React.CSSProperties = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
@@ -54,7 +54,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
             sx={{ height: 20, fontSize: "0.75rem", fontWeight: 600 }}
           />
         </Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}
+        >
           {task.title}
         </Typography>
         {task.description && (
@@ -65,6 +68,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default TaskCard;

@@ -1,6 +1,9 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import TaskCard from "./TaskCard";
 import { type IColumn, type ITask } from "../../types";
 import { Box, Typography, Button, Paper } from "@mui/material";
@@ -13,7 +16,12 @@ interface ColumnProps {
   onTaskClick?: (task: ITask) => void;
 }
 
-const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onTaskClick }) => {
+const Column: React.FC<ColumnProps> = ({
+  column,
+  tasks,
+  onAddTask,
+  onTaskClick,
+}) => {
   const { setNodeRef } = useDroppable({ id: column.id });
 
   return (
@@ -44,8 +52,18 @@ const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onTaskClick }
           gap: 2,
         }}
       >
-        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, flexGrow: 1 }}>
+        <SortableContext
+          items={tasks.map((t) => t.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+              flexGrow: 1,
+            }}
+          >
             {tasks.map((task) => (
               <TaskCard key={task.id} task={task} onClick={onTaskClick} />
             ))}
@@ -56,7 +74,11 @@ const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onTaskClick }
           fullWidth
           startIcon={<AddIcon />}
           onClick={() => onAddTask?.(column.id)}
-          sx={{ justifyContent: "flex-start", color: "text.secondary", textTransform: "none" }}
+          sx={{
+            justifyContent: "flex-start",
+            color: "text.secondary",
+            textTransform: "none",
+          }}
         >
           Add task
         </Button>

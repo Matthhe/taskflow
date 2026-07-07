@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -6,7 +6,7 @@ import {
 } from "@dnd-kit/sortable";
 import TaskCard from "./TaskCard";
 import { type IColumn, type ITask } from "../../types";
-import { Box, Typography, Button, Paper } from "@mui/material";
+import { Box, Typography, Button, Paper, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
 interface ColumnProps {
@@ -15,6 +15,7 @@ interface ColumnProps {
   onAddTask?: (columnId: string) => void;
   onTaskClick?: (task: ITask) => void;
   onDeleteTask?: (taskId: string) => void;
+  onRenameColumn?: (columnId: string, newTitle: string) => void;
 }
 
 const Column: React.FC<ColumnProps> = ({
@@ -23,8 +24,40 @@ const Column: React.FC<ColumnProps> = ({
   onAddTask,
   onTaskClick,
   onDeleteTask,
+  onRenameColumn,
 }) => {
   const { setNodeRef } = useDroppable({ id: column.id });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(column.title);
+
+  const startEditing = () => {
+    setEditValue(column.title);
+    setIsEditing(true);
+  };
+
+  const commitEdit = () => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== column.title) {
+      onRenameColumn?.(column.id, trimmed);
+    }
+    setIsEditing(false);
+  };
+
+  const cancelEdit = () => {
+    setEditValue(column.title);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
 
   return (
     <Box
@@ -37,9 +70,31 @@ const Column: React.FC<ColumnProps> = ({
         flexDirection: "column",
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, px: 0.5 }}>
-        {column.title} ({tasks.length})
-      </Typography>
+      {isEditing ? (
+        <TextField
+          autoFocus
+          size="small"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={handleKeyDown}
+          sx={{ mb: 2 }}
+        />
+      ) : (
+        <Typography
+          variant="h6"
+          onClick={startEditing}
+          sx={{
+            fontWeight: 700,
+            mb: 2,
+            px: 0.5,
+            cursor: "pointer",
+            "&:hover": { opacity: 0.7 },
+          }}
+        >
+          {column.title} ({tasks.length})
+        </Typography>
+      )}
 
       <Paper
         ref={setNodeRef}
@@ -67,7 +122,12 @@ const Column: React.FC<ColumnProps> = ({
             }}
           >
             {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} onClick={onTaskClick} onDelete={onDeleteTask} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                onClick={onTaskClick}
+                onDelete={onDeleteTask}
+              />
             ))}
           </Box>
         </SortableContext>

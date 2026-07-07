@@ -14,6 +14,7 @@ interface ColumnProps {
   tasks: ITask[];
   onAddTask?: (columnId: string) => void;
   onTaskClick?: (task: ITask) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
 const Column: React.FC<ColumnProps> = ({
@@ -21,6 +22,7 @@ const Column: React.FC<ColumnProps> = ({
   tasks,
   onAddTask,
   onTaskClick,
+  onDeleteTask,
 }) => {
   const { setNodeRef } = useDroppable({ id: column.id });
 
@@ -65,7 +67,7 @@ const Column: React.FC<ColumnProps> = ({
             }}
           >
             {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} onClick={onTaskClick} />
+              <TaskCard key={task.id} task={task} onClick={onTaskClick} onDelete={onDeleteTask} />
             ))}
           </Box>
         </SortableContext>

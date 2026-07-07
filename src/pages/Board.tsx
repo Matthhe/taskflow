@@ -165,6 +165,22 @@ const Board = () => {
     }
   };
 
+  const handleDeleteTask = async (taskId: string) => {
+  try {
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+    if (error) throw error;
+
+    setColumns((prev) =>
+      prev.map((col) => ({
+        ...col,
+        tasks: col.tasks.filter((t) => t.id !== taskId),
+      })),
+    );
+  } catch (err) {
+    console.error("Failed to delete task:", err);
+  }
+};
+
   const handleOpenTaskDialog = (columnId: string) => {
     setActiveColumnId(columnId);
     setIsTaskDialogOpen(true);
@@ -378,6 +394,7 @@ const Board = () => {
                       tasks={tasks}
                       onAddTask={handleOpenTaskDialog}
                       onTaskClick={handleTaskClick}
+                      onDeleteTask={handleDeleteTask}
                     />
                   </Grid>
                 );

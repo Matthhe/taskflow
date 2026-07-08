@@ -2,6 +2,7 @@ export interface IProfile {
   id: string;
   name: string | null;
   avatar_url: string | null;
+  email: string;
 }
 
 export interface IBoard {

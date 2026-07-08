@@ -39,9 +39,10 @@ const Register = () => {
       setIsSubmitting(true);
       await signUp(email, password);
       setSuccess(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Registration error:", err);
-      setError(err.message || "An error occurred during registration.");
+      const message = err instanceof Error ? err.message : "An error occurred during registration.";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

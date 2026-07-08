@@ -15,6 +15,7 @@ import Grid from "@mui/material/Grid";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
+import { useNotification } from "../hooks/useNotification";
 
 import {
   DndContext,
@@ -54,6 +55,8 @@ const Board = () => {
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+
+  const { notify } = useNotification();
 
   const [dragSourceColumnId, setDragSourceColumnId] = useState<string | null>(
     null,
@@ -105,9 +108,11 @@ const Board = () => {
       );
 
       setColumns(formattedColumns);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading board data:", err);
-      setError(err.message || "Failed to load the board");
+      const message = err instanceof Error ? err.message : "Error loading board data";
+      setError(message)
+      notify(message, "error");
     } finally {
       setLoading(false);
     }
@@ -132,6 +137,8 @@ const Board = () => {
       setColumns([...columns, { ...data, tasks: [] }]);
     } catch (err) {
       console.error("Failed to create column:", err);
+      const message = err instanceof Error ? err.message : "Failed to create column";
+      notify(message, "error");
     }
   };
 
@@ -170,6 +177,8 @@ const Board = () => {
       );
     } catch (err) {
       console.error("Failed to create task:", err);
+      const message = err instanceof Error ? err.message : "Failed to create task";
+      notify(message, "error");
     }
   };
 
@@ -186,6 +195,8 @@ const Board = () => {
       );
     } catch (err) {
       console.error("Failed to delete task:", err);
+      const message = err instanceof Error ? err.message : "Failed to delete task";
+      notify(message, "error");
     }
   };
   const handleRenameColumn = async (columnId: string, newTitle: string) => {
@@ -202,6 +213,8 @@ const Board = () => {
       );
     } catch (err) {
       console.error("Failed to rename column:", err);
+      const message = err instanceof Error ? err.message : "Failed to rename column";
+      notify(message, "error");
     }
   };
   const handleDeleteColumn = async (columnId: string) => {
@@ -215,6 +228,8 @@ const Board = () => {
       setColumns((prev) => prev.filter((col) => col.id !== columnId));
     } catch (err) {
       console.error("Failed to delete column:", err);
+      const message = err instanceof Error ? err.message : "Failed to delete column";
+      notify(message, "error");
     }
   };
 
@@ -320,6 +335,8 @@ const Board = () => {
         await updateTasksOrderInDb(activeCol.id, finalTasks);
       } catch (err) {
         console.error("Failed to save tasks order:", err);
+        const message = err instanceof Error ? err.message : "Failed to save tasks order";
+        notify(message, "error");
       }
     } else {
       const finalSourceCol = columns.find((c) => c.id === sourceColumnId);
@@ -336,6 +353,8 @@ const Board = () => {
         ]);
       } catch (err) {
         console.error("Failed to save cross-column tasks order:", err);
+        const message = err instanceof Error ? err.message : "Failed to save cross-column tasks order";
+        notify(message, "error");
       }
     }
   };

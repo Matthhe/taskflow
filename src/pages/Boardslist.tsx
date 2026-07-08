@@ -25,6 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useBoards } from "../hooks/useBoards";
 import { useAuth } from "../hooks/useAuth";
+import { useNotification } from "../hooks/useNotification";
 
 const BoardsList = () => {
   const { boards, isLoading, isError, createBoard, deleteBoard } = useBoards();
@@ -34,19 +35,33 @@ const BoardsList = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
 
+  const { notify } = useNotification();
+
   const handleCreate = async () => {
-    if (!newTitle.trim()) return;
+  if (!newTitle.trim()) return;
+  try {
     await createBoard.mutateAsync(newTitle.trim());
     setNewTitle("");
     setDialogOpen(false);
-  };
+  } catch (err) {
+    console.error("Failed to create board:", err);
+    const message = err instanceof Error ? err.message : "Failed to create board";
+    notify(message, "error");
+  }
+};
 
   const handleDelete = (e: React.MouseEvent, boardId: string) => {
-    e.stopPropagation();
-    if (confirm("Delete board with all tasks?")) {
-      deleteBoard.mutate(boardId);
-    }
-  };
+  e.stopPropagation();
+  if (confirm("Delete board with all tasks?")) {
+    deleteBoard.mutate(boardId, {
+      onError: (err) => {
+        console.error("Failed to delete board:", err);
+        const message = err instanceof Error ? err.message : "Failed to delete board";
+        notify(message, "error");
+      },
+    });
+  }
+};
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>

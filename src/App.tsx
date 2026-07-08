@@ -5,35 +5,38 @@ import Register from "./pages/Register";
 import Board from "./pages/Board";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BoardsList from "./pages/Boardslist";
+import { NotificationProvider } from "./providers/NotificationProvider";
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <BoardsList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/board/:boardId"
-            element={
-              <ProtectedRoute>
-                <Board />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <NotificationProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <BoardsList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/board/:boardId"
+              element={
+                <ProtectedRoute>
+                  <Board />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </NotificationProvider>
   );
 }
 

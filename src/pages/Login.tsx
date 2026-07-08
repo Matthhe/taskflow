@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth"; // Импортируем наш хук
+import { useAuth } from "../hooks/useAuth"; 
 import {
   Container,
   Box,
@@ -36,9 +36,10 @@ const Login = () => {
       await signInWithPassword(email, password);
 
       navigate("/");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Invalid email or password");
+      const message = err instanceof Error ? err.message : "Invalid email or password";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -71,7 +72,7 @@ const Login = () => {
             align="center"
             sx={{ fontWeight: 600 }}
           >
-            Вход в TaskFlow
+            Sign in to TaskFlow
           </Typography>
 
           {error && <Alert severity="error">{error}</Alert>}

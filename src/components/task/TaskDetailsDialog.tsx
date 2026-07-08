@@ -152,7 +152,12 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={onClose} disabled={isSaving} color="inherit" sx={{ textTransform: "none" }}>
+        <Button
+          onClick={onClose}
+          disabled={isSaving}
+          color="inherit"
+          sx={{ textTransform: "none" }}
+        >
           Cancel
         </Button>
         <Button

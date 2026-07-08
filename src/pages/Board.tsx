@@ -252,37 +252,40 @@ const Board = () => {
     setSelectedTask(task);
     setIsDetailsDialogOpen(true);
   };
-const handleUpdateTask = async (
-  taskId: string,
-  updates: {
-    title: string;
-    description: string;
-    priority: string;
-    due_date: string | null;
-    assignee_id: string | null;
-  },
-) => {
-  try {
-    const { data, error } = await supabase
-      .from("tasks")
-      .update(updates)
-      .eq("id", taskId)
-      .select()
-      .single();
-    if (error) throw error;
+  const handleUpdateTask = async (
+    taskId: string,
+    updates: {
+      title: string;
+      description: string;
+      priority: string;
+      due_date: string | null;
+      assignee_id: string | null;
+    },
+  ) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update(updates)
+        .eq("id", taskId)
+        .select()
+        .single();
+      if (error) throw error;
 
-    setColumns((prev) =>
-      prev.map((col) => ({
-        ...col,
-        tasks: col.tasks.map((t) => (t.id === taskId ? { ...t, ...data } : t)),
-      })),
-    );
-  } catch (err) {
-    console.error("Failed to update task:", err);
-    const message = err instanceof Error ? err.message : "Failed to update task";
-    notify(message, "error");
-  }
-};
+      setColumns((prev) =>
+        prev.map((col) => ({
+          ...col,
+          tasks: col.tasks.map((t) =>
+            t.id === taskId ? { ...t, ...data } : t,
+          ),
+        })),
+      );
+    } catch (err) {
+      console.error("Failed to update task:", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to update task";
+      notify(message, "error");
+    }
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = event.active.id as string;

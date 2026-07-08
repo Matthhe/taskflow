@@ -28,16 +28,16 @@ const ColumnDialog: React.FC<ColumnDialogProps> = ({
   };
 
   const handleCreate = async () => {
-  if (!title.trim()) return;
-  try {
-    setIsSaving(true);
-    await onSave(title.trim());
-    setTitle("");
-    onClose();
-  } finally {
-    setIsSaving(false);
-  }
-};
+    if (!title.trim()) return;
+    try {
+      setIsSaving(true);
+      await onSave(title.trim());
+      setTitle("");
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">

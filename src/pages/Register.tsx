@@ -41,7 +41,10 @@ const Register = () => {
       setSuccess(true);
     } catch (err) {
       console.error("Registration error:", err);
-      const message = err instanceof Error ? err.message : "An error occurred during registration.";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An error occurred during registration.";
       setError(message);
     } finally {
       setIsSubmitting(false);

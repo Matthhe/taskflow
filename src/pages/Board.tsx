@@ -110,8 +110,9 @@ const Board = () => {
       setColumns(formattedColumns);
     } catch (err) {
       console.error("Error loading board data:", err);
-      const message = err instanceof Error ? err.message : "Error loading board data";
-      setError(message)
+      const message =
+        err instanceof Error ? err.message : "Error loading board data";
+      setError(message);
       notify(message, "error");
     } finally {
       setLoading(false);
@@ -137,7 +138,8 @@ const Board = () => {
       setColumns([...columns, { ...data, tasks: [] }]);
     } catch (err) {
       console.error("Failed to create column:", err);
-      const message = err instanceof Error ? err.message : "Failed to create column";
+      const message =
+        err instanceof Error ? err.message : "Failed to create column";
       notify(message, "error");
     }
   };
@@ -177,7 +179,8 @@ const Board = () => {
       );
     } catch (err) {
       console.error("Failed to create task:", err);
-      const message = err instanceof Error ? err.message : "Failed to create task";
+      const message =
+        err instanceof Error ? err.message : "Failed to create task";
       notify(message, "error");
     }
   };
@@ -195,7 +198,8 @@ const Board = () => {
       );
     } catch (err) {
       console.error("Failed to delete task:", err);
-      const message = err instanceof Error ? err.message : "Failed to delete task";
+      const message =
+        err instanceof Error ? err.message : "Failed to delete task";
       notify(message, "error");
     }
   };
@@ -213,7 +217,8 @@ const Board = () => {
       );
     } catch (err) {
       console.error("Failed to rename column:", err);
-      const message = err instanceof Error ? err.message : "Failed to rename column";
+      const message =
+        err instanceof Error ? err.message : "Failed to rename column";
       notify(message, "error");
     }
   };
@@ -228,7 +233,8 @@ const Board = () => {
       setColumns((prev) => prev.filter((col) => col.id !== columnId));
     } catch (err) {
       console.error("Failed to delete column:", err);
-      const message = err instanceof Error ? err.message : "Failed to delete column";
+      const message =
+        err instanceof Error ? err.message : "Failed to delete column";
       notify(message, "error");
     }
   };
@@ -335,7 +341,8 @@ const Board = () => {
         await updateTasksOrderInDb(activeCol.id, finalTasks);
       } catch (err) {
         console.error("Failed to save tasks order:", err);
-        const message = err instanceof Error ? err.message : "Failed to save tasks order";
+        const message =
+          err instanceof Error ? err.message : "Failed to save tasks order";
         notify(message, "error");
       }
     } else {
@@ -353,7 +360,10 @@ const Board = () => {
         ]);
       } catch (err) {
         console.error("Failed to save cross-column tasks order:", err);
-        const message = err instanceof Error ? err.message : "Failed to save cross-column tasks order";
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Failed to save cross-column tasks order";
         notify(message, "error");
       }
     }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth"; 
+import { useAuth } from "../hooks/useAuth";
 import {
   Container,
   Box,
@@ -38,7 +38,8 @@ const Login = () => {
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
-      const message = err instanceof Error ? err.message : "Invalid email or password";
+      const message =
+        err instanceof Error ? err.message : "Invalid email or password";
       setError(message);
     } finally {
       setIsSubmitting(false);

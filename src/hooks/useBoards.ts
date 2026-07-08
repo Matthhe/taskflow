@@ -59,7 +59,10 @@ export const useBoards = () => {
 
   const deleteBoard = useMutation({
     mutationFn: async (boardId: string) => {
-      const { error } = await supabase.from("boards").delete().eq("id", boardId);
+      const { error } = await supabase
+        .from("boards")
+        .delete()
+        .eq("id", boardId);
       if (error) throw error;
     },
     onSuccess: () => {

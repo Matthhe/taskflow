@@ -37,18 +37,18 @@ const TaskDialog: React.FC<TaskDialogProps> = ({ open, onClose, onSave }) => {
   };
 
   const handleCreate = async () => {
-  if (!title.trim()) return;
-  try {
-    setIsSaving(true);
-    await onSave(title.trim(), description.trim(), priority.trim());
-    setTitle("");
-    setDescription("");
-    setPriority("medium");
-    onClose();
-  } finally {
-    setIsSaving(false);
-  }
-};
+    if (!title.trim()) return;
+    try {
+      setIsSaving(true);
+      await onSave(title.trim(), description.trim(), priority.trim());
+      setTitle("");
+      setDescription("");
+      setPriority("medium");
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
+  };
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: 600 }}>New task</DialogTitle>

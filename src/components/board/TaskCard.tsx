@@ -1,7 +1,14 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, CardContent, Typography, Chip, Box, IconButton } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Chip,
+  Box,
+  IconButton,
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { ITask } from "../../types";
 
@@ -56,7 +63,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onDelete }) => {
       }}
     >
       <CardContent sx={{ "&:last-child": { pb: 2 }, p: 2 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mb: 1,
+          }}
+        >
           <Chip
             label={task.priority}
             size="small"
@@ -72,7 +86,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onDelete }) => {
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}
+        >
           {task.title}
         </Typography>
         {task.description && (

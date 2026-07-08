@@ -16,6 +16,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
 import { useNotification } from "../hooks/useNotification";
+import TaskDetailsDialog from "../components/task/TaskDetailsDialog";
 
 import {
   DndContext,
@@ -55,6 +56,9 @@ const Board = () => {
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+
+  const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   const { notify } = useNotification();
 
@@ -245,8 +249,40 @@ const Board = () => {
   };
 
   const handleTaskClick = (task: ITask) => {
-    console.log("Task clicked:", task);
+    setSelectedTask(task);
+    setIsDetailsDialogOpen(true);
   };
+const handleUpdateTask = async (
+  taskId: string,
+  updates: {
+    title: string;
+    description: string;
+    priority: string;
+    due_date: string | null;
+    assignee_id: string | null;
+  },
+) => {
+  try {
+    const { data, error } = await supabase
+      .from("tasks")
+      .update(updates)
+      .eq("id", taskId)
+      .select()
+      .single();
+    if (error) throw error;
+
+    setColumns((prev) =>
+      prev.map((col) => ({
+        ...col,
+        tasks: col.tasks.map((t) => (t.id === taskId ? { ...t, ...data } : t)),
+      })),
+    );
+  } catch (err) {
+    console.error("Failed to update task:", err);
+    const message = err instanceof Error ? err.message : "Failed to update task";
+    notify(message, "error");
+  }
+};
 
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = event.active.id as string;
@@ -489,6 +525,13 @@ const Board = () => {
         open={isTaskDialogOpen}
         onClose={() => setIsTaskDialogOpen(false)}
         onSave={handleCreateTask}
+      />
+      <TaskDetailsDialog
+        open={isDetailsDialogOpen}
+        task={selectedTask}
+        boardId={boardId}
+        onClose={() => setIsDetailsDialogOpen(false)}
+        onSave={handleUpdateTask}
       />
     </Box>
   );

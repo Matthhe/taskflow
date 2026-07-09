@@ -17,6 +17,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
 import { useNotification } from "../hooks/useNotification";
 import TaskDetailsDialog from "../components/task/TaskDetailsDialog";
+import { useBoardMembers } from "../hooks/useBoardMembers";
 
 import {
   DndContext,
@@ -47,6 +48,7 @@ const Board = () => {
   const { boardId } = useParams<{ boardId: string }>();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { data: members = [] } = useBoardMembers(boardId);
 
   const [boardTitle, setBoardTitle] = useState<string>("");
   const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
@@ -505,6 +507,7 @@ const Board = () => {
                     <Column
                       column={columnData}
                       tasks={tasks}
+                      members={members}
                       onAddTask={handleOpenTaskDialog}
                       onTaskClick={handleTaskClick}
                       onDeleteTask={handleDeleteTask}

@@ -5,7 +5,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import TaskCard from "./TaskCard";
-import { type IColumn, type ITask } from "../../types";
+import type { IColumn, ITask, IProfile } from "../../types";
 import {
   Box,
   Typography,
@@ -20,6 +20,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 interface ColumnProps {
   column: IColumn;
   tasks: ITask[];
+  members: IProfile[];
   onAddTask?: (columnId: string) => void;
   onTaskClick?: (task: ITask) => void;
   onDeleteTask?: (taskId: string) => void;
@@ -30,6 +31,7 @@ interface ColumnProps {
 const Column: React.FC<ColumnProps> = ({
   column,
   tasks,
+  members,
   onAddTask,
   onTaskClick,
   onDeleteTask,
@@ -151,6 +153,7 @@ const Column: React.FC<ColumnProps> = ({
               <TaskCard
                 key={task.id}
                 task={task}
+                assignee={members.find((m) => m.id === task.assignee_id)}
                 onClick={onTaskClick}
                 onDelete={onDeleteTask}
               />

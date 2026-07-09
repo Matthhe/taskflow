@@ -8,12 +8,16 @@ import {
   Chip,
   Box,
   IconButton,
+  Avatar,
+  Tooltip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { ITask } from "../../types";
+import EventIcon from "@mui/icons-material/Event";
+import type { ITask, IProfile } from "../../types";
 
 interface TaskCardProps {
   task: ITask;
+  assignee?: IProfile;
   onClick?: (task: ITask) => void;
   onDelete?: (taskId: string) => void;
 }
@@ -24,7 +28,17 @@ const priorityColor = (priority: string) => {
   return "default";
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onDelete }) => {
+const formatDueDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  assignee,
+  onClick,
+  onDelete,
+}) => {
   const {
     attributes,
     listeners,
@@ -86,17 +100,47 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, onDelete }) => {
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
+
         <Typography
           variant="subtitle1"
           sx={{ fontWeight: 600, mb: 0.5, lineHeight: 1.3 }}
         >
           {task.title}
         </Typography>
+
         {task.description && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {task.description}
           </Typography>
         )}
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: 1,
+          }}
+        >
+          {task.due_date ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <EventIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary">
+                {formatDueDate(task.due_date)}
+              </Typography>
+            </Box>
+          ) : (
+            <Box />
+          )}
+
+          {assignee && (
+            <Tooltip title={assignee.name || assignee.email}>
+              <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem" }}>
+                {(assignee.name || assignee.email)?.[0]?.toUpperCase()}
+              </Avatar>
+            </Tooltip>
+          )}
+        </Box>
       </CardContent>
     </Card>
   );

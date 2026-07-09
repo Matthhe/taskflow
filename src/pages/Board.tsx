@@ -18,6 +18,8 @@ import AddIcon from "@mui/icons-material/Add";
 import { useNotification } from "../hooks/useNotification";
 import TaskDetailsDialog from "../components/task/TaskDetailsDialog";
 import { useBoardMembers } from "../hooks/useBoardMembers";
+import PeopleIcon from "@mui/icons-material/People";
+import MembersDialog from "../components/board/MembersDialog";
 
 import {
   DndContext,
@@ -48,7 +50,7 @@ const Board = () => {
   const { boardId } = useParams<{ boardId: string }>();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
-  const { data: members = [] } = useBoardMembers(boardId);
+  const { members } = useBoardMembers(boardId);
 
   const [boardTitle, setBoardTitle] = useState<string>("");
   const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
@@ -61,6 +63,8 @@ const Board = () => {
 
   const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [boardOwnerId, setBoardOwnerId] = useState<string | null>(null);
+  const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
 
   const { notify } = useNotification();
 
@@ -82,11 +86,12 @@ const Board = () => {
 
       const { data: boardData, error: boardError } = await supabase
         .from("boards")
-        .select("title")
+        .select("title, owner_id")
         .eq("id", boardId)
         .single();
       if (boardError) throw boardError;
       setBoardTitle(boardData.title);
+      setBoardOwnerId(boardData.owner_id);
 
       const { data: colsData, error: colsError } = await supabase
         .from("columns")
@@ -452,6 +457,15 @@ const Board = () => {
           </Typography>
           <Button
             variant="outlined"
+            size="small"
+            startIcon={<PeopleIcon />}
+            onClick={() => setIsMembersDialogOpen(true)}
+            sx={{ mr: 2, textTransform: "none" }}
+          >
+            Members
+          </Button>
+          <Button
+            variant="outlined"
             color="error"
             size="small"
             startIcon={<LogoutIcon />}
@@ -538,6 +552,12 @@ const Board = () => {
         boardId={boardId}
         onClose={() => setIsDetailsDialogOpen(false)}
         onSave={handleUpdateTask}
+      />
+      <MembersDialog
+        open={isMembersDialogOpen}
+        onClose={() => setIsMembersDialogOpen(false)}
+        boardId={boardId}
+        isOwner={user?.id === boardOwnerId}
       />
     </Box>
   );

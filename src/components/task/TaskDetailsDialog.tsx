@@ -40,7 +40,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  const { data: members = [] } = useBoardMembers(boardId);
+  const { members } = useBoardMembers(boardId);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

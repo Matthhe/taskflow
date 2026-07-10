@@ -32,18 +32,29 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync({ name: name.trim(), avatar_url: avatarUrl.trim() });
+      await updateProfile.mutateAsync({
+        name: name.trim(),
+        avatar_url: avatarUrl.trim(),
+      });
       notify("Profile updated", "success");
     } catch (err) {
       console.error("Failed to update profile:", err);
-      const message = err instanceof Error ? err.message : "Failed to update profile";
+      const message =
+        err instanceof Error ? err.message : "Failed to update profile";
       notify(message, "error");
     }
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -51,8 +62,25 @@ const Profile = () => {
 
   return (
     <Container component="main" maxWidth="xs">
-      <Box sx={{ marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <Paper elevation={3} sx={{ padding: 4, display: "flex", flexDirection: "column", gap: 2, width: "100%", borderRadius: 2 }}>
+      <Box
+        sx={{
+          marginTop: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 4,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            width: "100%",
+            borderRadius: 2,
+          }}
+        >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
             <IconButton onClick={() => navigate("/")}>
               <ArrowBackIcon />
@@ -63,7 +91,10 @@ const Profile = () => {
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-            <Avatar src={avatarUrl || undefined} sx={{ width: 80, height: 80, fontSize: "2rem" }}>
+            <Avatar
+              src={avatarUrl || undefined}
+              sx={{ width: 80, height: 80, fontSize: "2rem" }}
+            >
               {(name || profile?.email)?.[0]?.toUpperCase()}
             </Avatar>
           </Box>

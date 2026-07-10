@@ -204,8 +204,12 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                 }
               >
                 <ListItemAvatar>
-                  <Avatar src={comment.author?.avatar_url || undefined} sx={{ width: 32, height: 32 }}>
-                    {(comment.author?.name || comment.author?.email)?.[0]?.toUpperCase()}
+                  <Avatar
+                    src={comment.author?.avatar_url || undefined}
+                    sx={{ width: 32, height: 32 }}
+                  >
+                    {(comment.author?.name ||
+                      comment.author?.email)?.[0]?.toUpperCase()}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText

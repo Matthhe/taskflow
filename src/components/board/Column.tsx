@@ -21,6 +21,7 @@ interface ColumnProps {
   column: IColumn;
   tasks: ITask[];
   members: IProfile[];
+  isOwner: boolean;
   onAddTask?: (columnId: string) => void;
   onTaskClick?: (task: ITask) => void;
   onDeleteTask?: (taskId: string) => void;
@@ -32,6 +33,7 @@ const Column: React.FC<ColumnProps> = ({
   column,
   tasks,
   members,
+  isOwner,
   onAddTask,
   onTaskClick,
   onDeleteTask,
@@ -109,18 +111,20 @@ const Column: React.FC<ColumnProps> = ({
         >
           <Typography
             variant="h6"
-            onClick={startEditing}
+            onClick={isOwner ? startEditing : undefined}
             sx={{
               fontWeight: 700,
-              cursor: "pointer",
-              "&:hover": { opacity: 0.7 },
+              cursor: isOwner ? "pointer" : "default",
+              "&:hover": isOwner ? { opacity: 0.7 } : {},
             }}
           >
             {column.title} ({tasks.length})
           </Typography>
-          <IconButton size="small" onClick={handleDeleteClick}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          {isOwner && (
+            <IconButton size="small" onClick={handleDeleteClick}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
       )}
 
@@ -155,24 +159,26 @@ const Column: React.FC<ColumnProps> = ({
                 task={task}
                 assignee={members.find((m) => m.id === task.assignee_id)}
                 onClick={onTaskClick}
-                onDelete={onDeleteTask}
+                onDelete={isOwner ? onDeleteTask : undefined}
               />
             ))}
           </Box>
         </SortableContext>
 
-        <Button
-          fullWidth
-          startIcon={<AddIcon />}
-          onClick={() => onAddTask?.(column.id)}
-          sx={{
-            justifyContent: "flex-start",
-            color: "text.secondary",
-            textTransform: "none",
-          }}
-        >
-          Add task
-        </Button>
+        {isOwner && (
+          <Button
+            fullWidth
+            startIcon={<AddIcon />}
+            onClick={() => onAddTask?.(column.id)}
+            sx={{
+              justifyContent: "flex-start",
+              color: "text.secondary",
+              textTransform: "none",
+            }}
+          >
+            Add task
+          </Button>
+        )}
       </Paper>
     </Box>
   );

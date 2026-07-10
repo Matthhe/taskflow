@@ -45,3 +45,7 @@ export interface IComment {
   content: string;
   created_at: string;
 }
+
+export interface ICommentWithAuthor extends IComment {
+  author: IProfile;
+}

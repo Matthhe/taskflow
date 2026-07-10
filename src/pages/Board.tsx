@@ -68,6 +68,8 @@ const Board = () => {
 
   const { notify } = useNotification();
 
+  const isOwner = user?.id === boardOwnerId;
+
   const [dragSourceColumnId, setDragSourceColumnId] = useState<string | null>(
     null,
   );
@@ -484,13 +486,15 @@ const Board = () => {
         )}
 
         <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setIsColumnDialogOpen(true)}
-          >
-            Add column
-          </Button>
+          {isOwner && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setIsColumnDialogOpen(true)}
+            >
+              Add column
+            </Button>
+          )}
         </Box>
 
         <DndContext
@@ -522,6 +526,7 @@ const Board = () => {
                       column={columnData}
                       tasks={tasks}
                       members={members}
+                      isOwner={isOwner}
                       onAddTask={handleOpenTaskDialog}
                       onTaskClick={handleTaskClick}
                       onDeleteTask={handleDeleteTask}

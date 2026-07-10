@@ -91,14 +91,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
             color={priorityColor(task.priority)}
             sx={{ height: 20, fontSize: "0.75rem", fontWeight: 600 }}
           />
-          <IconButton
-            className="task-delete-btn"
-            size="small"
-            onClick={handleDeleteClick}
-            sx={{ opacity: 0, transition: "opacity 0.15s", p: 0.5, ml: 1 }}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          {onDelete && (
+            <IconButton
+              className="task-delete-btn"
+              size="small"
+              onClick={handleDeleteClick}
+              sx={{ opacity: 0, transition: "opacity 0.15s", p: 0.5, ml: 1 }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
 
         <Typography

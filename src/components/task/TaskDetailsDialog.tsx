@@ -11,9 +11,20 @@ import {
   Select,
   MenuItem,
   Box,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  IconButton,
+  Divider,
+  Typography,
 } from "@mui/material";
 import { useBoardMembers } from "../../hooks/useBoardMembers";
 import type { ITask, TaskPriority } from "../../types";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useComments } from "../../hooks/useComments";
+import { useAuth } from "../../hooks/useAuth";
 
 interface TaskUpdates {
   title: string;
@@ -42,6 +53,10 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
 }) => {
   const { members } = useBoardMembers(boardId);
 
+  const { user } = useAuth();
+  const { comments, addComment, deleteComment } = useComments(task?.id);
+  const [commentText, setCommentText] = useState("");
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
@@ -58,6 +73,23 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
       setAssigneeId(task.assignee_id || UNASSIGNED);
     }
   }, [task]);
+
+  const handleAddComment = async () => {
+    if (!commentText.trim() || !user) return;
+    try {
+      await addComment.mutateAsync({
+        userId: user.id,
+        content: commentText.trim(),
+      });
+      setCommentText("");
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    deleteComment.mutate(commentId);
+  };
 
   const handleSave = async () => {
     if (!task || !title.trim()) return;
@@ -148,6 +180,72 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
               ))}
             </Select>
           </FormControl>
+
+          <Divider />
+
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            Comments
+          </Typography>
+
+          <List sx={{ maxHeight: 200, overflowY: "auto" }}>
+            {comments.map((comment) => (
+              <ListItem
+                key={comment.id}
+                secondaryAction={
+                  comment.user_id === user?.id ? (
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={() => handleDeleteComment(comment.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  ) : null
+                }
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ width: 32, height: 32 }}>
+                    {(comment.author?.name ||
+                      comment.author?.email)?.[0]?.toUpperCase()}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={comment.author?.name || comment.author?.email}
+                  secondary={
+                    <>
+                      {comment.content}
+                      <br />
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        color="text.secondary"
+                      >
+                        {new Date(comment.created_at).toLocaleString()}
+                      </Typography>
+                    </>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Write a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+            <Button
+              variant="contained"
+              onClick={handleAddComment}
+              disabled={!commentText.trim() || addComment.isPending}
+              sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+            >
+              Send
+            </Button>
+          </Box>
         </Box>
       </DialogContent>
 

@@ -6,6 +6,7 @@ import Board from "./pages/Board";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BoardsList from "./pages/Boardslist";
 import { NotificationProvider } from "./providers/NotificationProvider";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -31,7 +32,7 @@ function App() {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

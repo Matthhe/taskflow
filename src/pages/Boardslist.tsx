@@ -26,6 +26,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useBoards } from "../hooks/useBoards";
 import { useAuth } from "../hooks/useAuth";
 import { useNotification } from "../hooks/useNotification";
+import PersonIcon from "@mui/icons-material/Person";
 
 const BoardsList = () => {
   const { boards, isLoading, isError, createBoard, deleteBoard } = useBoards();
@@ -90,6 +91,9 @@ const BoardsList = () => {
           >
             Log out
           </Button>
+          <IconButton onClick={() => navigate("/profile")} sx={{ mr: 1 }}>
+            <PersonIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 

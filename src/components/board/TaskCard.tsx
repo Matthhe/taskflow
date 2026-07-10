@@ -137,7 +137,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
           {assignee && (
             <Tooltip title={assignee.name || assignee.email}>
-              <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem" }}>
+              <Avatar src={assignee.avatar_url || undefined} sx={{ width: 24, height: 24, fontSize: "0.75rem" }}>
                 {(assignee.name || assignee.email)?.[0]?.toUpperCase()}
               </Avatar>
             </Tooltip>

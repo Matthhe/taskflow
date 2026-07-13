@@ -12,6 +12,10 @@ import {
   Alert,
   TextField,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -58,12 +62,15 @@ const Board = () => {
   const navigate = useNavigate();
   const { members } = useBoardMembers(boardId);
 
-  const [boardTitle, setBoardTitle] = useState<string>("");
   const [columns, setColumns] = useState<ColumnWithTasks[]>([]);
+  const [boardTitle, setBoardTitle] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [deadlineFilter, setDeadlineFilter] = useState<string>("all");  
 
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
@@ -78,7 +85,15 @@ const Board = () => {
   const { notify } = useNotification();
 
   const isOwner = user?.id === boardOwnerId;
-  const isSearchActive = searchQuery.trim().length > 0;
+
+  const isFilteringActive = useMemo(() => {
+    return (
+      searchQuery.trim().length > 0 ||
+      priorityFilter !== "all" ||
+      assigneeFilter !== "all" ||
+      deadlineFilter !== "all"
+    );
+  }, [searchQuery, priorityFilter, assigneeFilter, deadlineFilter]);
 
   const [dragSourceColumnId, setDragSourceColumnId] = useState<string | null>(
     null,
@@ -86,25 +101,61 @@ const Board = () => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: isSearchActive
-        ? { distance: Infinity }
+      activationConstraint: isFilteringActive
+        ? { distance: Infinity }  
         : { distance: 5 },
     }),
   );
 
   const filteredColumns = useMemo(() => {
-    if (!isSearchActive) return columns;
+    const query = searchQuery.toLowerCase().trim();
 
-    const query = searchQuery.toLowerCase();
-    return columns.map((col) => ({
-      ...col,
-      tasks: col.tasks.filter(
-        (task) =>
-          task.title?.toLowerCase().includes(query) ||
-          task.description?.toLowerCase().includes(query),
-      ),
-    }));
-  }, [columns, searchQuery, isSearchActive]);
+    return columns.map((col) => {
+      const filteredTasks = col.tasks.filter((task) => {
+        if (
+          query &&
+          !task.title?.toLowerCase().includes(query) &&
+          !task.description?.toLowerCase().includes(query)
+        ) {
+          return false;
+        }
+
+        if (priorityFilter !== "all" && task.priority !== priorityFilter) {
+          return false;
+        }
+
+        if (assigneeFilter !== "all" && task.assignee_id !== assigneeFilter) {
+          return false;
+        }
+
+        if (deadlineFilter !== "all") {
+          if (!task.due_date) return false;
+
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const taskDate = new Date(task.due_date);
+          taskDate.setHours(0, 0, 0, 0);
+
+          if (deadlineFilter === "overdue" && taskDate >= today) {
+            return false;
+          }
+          if (
+            deadlineFilter === "today" &&
+            taskDate.getTime() !== today.getTime()
+          ) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      return {
+        ...col,
+        tasks: filteredTasks,
+      };
+    });
+  }, [columns, searchQuery, priorityFilter, assigneeFilter, deadlineFilter]);
 
   const fetchBoardData = async () => {
     if (!boardId) return;
@@ -360,6 +411,7 @@ const Board = () => {
       notify(message, "error");
     }
   };
+
   const handleRenameColumn = async (columnId: string, newTitle: string) => {
     try {
       const { error } = await supabase
@@ -379,6 +431,7 @@ const Board = () => {
       notify(message, "error");
     }
   };
+
   const handleDeleteColumn = async (columnId: string) => {
     try {
       const { error } = await supabase
@@ -405,6 +458,7 @@ const Board = () => {
     setSelectedTask(task);
     setIsDetailsDialogOpen(true);
   };
+
   const handleUpdateTask = async (
     taskId: string,
     updates: {
@@ -441,14 +495,16 @@ const Board = () => {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    if (isSearchActive) return;
+    if (isFilteringActive) return;
     const activeId = event.active.id as string;
     const col = findColumnByTaskId(activeId);
     setDragSourceColumnId(col ? col.id : null);
   };
 
   const findColumnByTaskId = (taskId: string) => {
-    return columns.find((col) => col.tasks.some((task) => task.id === taskId));
+    return filteredColumns.find((col) =>
+      col.tasks.some((task) => task.id === taskId),
+    );
   };
 
   const updateTasksOrderInDb = async (
@@ -465,7 +521,7 @@ const Board = () => {
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    if (isSearchActive) return;
+    if (isFilteringActive) return;
     const { active, over } = event;
     if (!over) return;
 
@@ -502,7 +558,7 @@ const Board = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    if (isSearchActive) return;
+    if (isFilteringActive) return;
     const { active, over } = event;
     const sourceColumnId = dragSourceColumnId;
     setDragSourceColumnId(null);
@@ -626,8 +682,8 @@ const Board = () => {
             }}
             sx={{
               flexGrow: 1,
-              maxWidth: 400,
-              mx: 2,
+              maxWidth: 300,
+              mx: 1,
               "& .MuiOutlinedInput-root": { borderRadius: 2 },
             }}
           />
@@ -675,21 +731,74 @@ const Board = () => {
 
         <Box
           sx={{
-            mb: 3,
+            mb: 4,
             display: "flex",
-            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 2,
             alignItems: "center",
+            bgcolor: "background.paper",
+            p: 2,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
           }}
         >
-          {isSearchActive && (
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="priority-filter-label">Priority</InputLabel>
+            <Select
+              labelId="priority-filter-label"
+              value={priorityFilter}
+              label="Priority"
+              onChange={(e) => setPriorityFilter(e.target.value)}
+            >
+              <MenuItem value="all">All Priorities</MenuItem>
+              <MenuItem value="low">Low</MenuItem>
+              <MenuItem value="medium">Medium</MenuItem>
+              <MenuItem value="high">High</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel id="assignee-filter-label">Assignee</InputLabel>
+            <Select
+              labelId="assignee-filter-label"
+              value={assigneeFilter}
+              label="Assignee"
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+            >
+              <MenuItem value="all">All Assignees</MenuItem>
+              {members?.map((member: any) => (
+                <MenuItem key={member.id} value={member.id}>
+                  {member.email || member.id}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="deadline-filter-label">Deadline</InputLabel>
+            <Select
+              labelId="deadline-filter-label"
+              value={deadlineFilter}
+              label="Deadline"
+              onChange={(e) => setDeadlineFilter(e.target.value)}
+            >
+              <MenuItem value="all">Any Date</MenuItem>
+              <MenuItem value="today">Due Today</MenuItem>
+              <MenuItem value="overdue">Overdue</MenuItem>
+            </Select>
+          </FormControl>
+
+          {isFilteringActive && (
             <Typography
               variant="body2"
               color="warning.main"
-              sx={{ fontWeight: 500 }}
+              sx={{ fontWeight: 500, ml: 1 }}
             >
-              Sorting is disabled during an active search.
+              Sorting is disabled during active filtering.
             </Typography>
           )}
+
           <Box sx={{ ml: "auto" }}>
             {isOwner && (
               <Button

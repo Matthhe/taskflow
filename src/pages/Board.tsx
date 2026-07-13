@@ -136,6 +136,28 @@ const Board = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping =
+        ["INPUT", "TEXTAREA"].includes(target.tagName) ||
+        target.isContentEditable;
+      if (isTyping) return;
+
+      if (
+        e.key.toLowerCase() === "n" &&
+        !isTaskDialogOpen &&
+        !isColumnDialogOpen &&
+        columns.length > 0
+      ) {
+        e.preventDefault();
+        handleOpenTaskDialog(columns[0].id);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [columns, isTaskDialogOpen, isColumnDialogOpen]);
 
   useEffect(() => {
     if (user && boardId) {

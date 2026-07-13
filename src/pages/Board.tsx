@@ -41,6 +41,9 @@ import { supabase } from "../services/supabase";
 import ColumnDialog from "../components/ColumnDialog";
 import TaskDialog from "../components/TaskDialog";
 import type { ITask, IColumn } from "../types";
+import { useThemeMode } from "../providers/ThemeProviderWrapper";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 
 interface ColumnWithTasks extends IColumn {
   tasks: ITask[];
@@ -65,6 +68,8 @@ const Board = () => {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [boardOwnerId, setBoardOwnerId] = useState<string | null>(null);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
+
+  const { mode, toggleMode } = useThemeMode();
 
   const { notify } = useNotification();
 
@@ -528,14 +533,22 @@ const Board = () => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "#f5f5f5", minHeight: "100vh", pb: 4 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        bgcolor: "background.default",
+        minHeight: "100vh",
+        pb: 4,
+      }}
+    >
       <AppBar
         position="static"
         elevation={0}
         sx={{
           bgcolor: "background.paper",
           color: "text.primary",
-          borderBottom: "1px solid #e0e0e0",
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
         <Toolbar>
@@ -570,6 +583,10 @@ const Board = () => {
           >
             Log out
           </Button>
+
+          <IconButton onClick={toggleMode} sx={{ mr: 2 }}>
+            {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -606,7 +623,10 @@ const Board = () => {
               pb: 2,
               "&::-webkit-scrollbar": { height: "8px" },
               "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "rgba(0,0,0,0.1)",
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.2)"
+                    : "rgba(0,0,0,0.1)",
                 borderRadius: "4px",
               },
             }}

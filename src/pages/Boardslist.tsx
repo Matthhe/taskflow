@@ -27,6 +27,9 @@ import { useBoards } from "../hooks/useBoards";
 import { useAuth } from "../hooks/useAuth";
 import { useNotification } from "../hooks/useNotification";
 import PersonIcon from "@mui/icons-material/Person";
+import { useThemeMode } from "../providers/ThemeProviderWrapper";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 
 const BoardsList = () => {
   const { boards, isLoading, isError, createBoard, deleteBoard } = useBoards();
@@ -35,6 +38,8 @@ const BoardsList = () => {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+
+  const { mode, toggleMode } = useThemeMode();
 
   const { notify } = useNotification();
 
@@ -67,14 +72,15 @@ const BoardsList = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <AppBar
         position="static"
         elevation={0}
         sx={{
           bgcolor: "background.paper",
           color: "text.primary",
-          borderBottom: "1px solid #e0e0e0",
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
         <Toolbar>
@@ -93,6 +99,10 @@ const BoardsList = () => {
           </Button>
           <IconButton onClick={() => navigate("/profile")} sx={{ mr: 1 }}>
             <PersonIcon />
+          </IconButton>
+
+          <IconButton onClick={toggleMode} sx={{ mr: 2 }}>
+            {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Toolbar>
       </AppBar>

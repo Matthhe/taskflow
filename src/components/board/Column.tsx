@@ -82,7 +82,7 @@ const Column: React.FC<ColumnProps> = ({
     <Box
       sx={{
         width: 300,
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "background.default",
         borderRadius: 2,
         padding: 2,
         display: "flex",
@@ -133,7 +133,8 @@ const Column: React.FC<ColumnProps> = ({
         elevation={0}
         sx={{
           p: 2,
-          bgcolor: "#eceff1",
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark" ? "#2a2a2a" : "#eceff1",
           borderRadius: 2,
           minHeight: "70vh",
           display: "flex",

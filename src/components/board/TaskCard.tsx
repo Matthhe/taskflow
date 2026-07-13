@@ -69,7 +69,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
       elevation={0}
       sx={{
         borderRadius: 1.5,
-        border: "1px solid #e0e0e0",
+        border: "1px solid",
+        borderColor: "divider",
         cursor: "grab",
         position: "relative",
         "&:active": { cursor: "grabbing" },

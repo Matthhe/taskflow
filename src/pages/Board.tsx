@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -10,11 +10,14 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 import { useNotification } from "../hooks/useNotification";
 import TaskDetailsDialog from "../components/task/TaskDetailsDialog";
 import { useBoardMembers } from "../hooks/useBoardMembers";
@@ -60,6 +63,8 @@ const Board = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
@@ -70,10 +75,10 @@ const Board = () => {
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
 
   const { mode, toggleMode } = useThemeMode();
-
   const { notify } = useNotification();
 
   const isOwner = user?.id === boardOwnerId;
+  const isSearchActive = searchQuery.trim().length > 0;
 
   const [dragSourceColumnId, setDragSourceColumnId] = useState<string | null>(
     null,
@@ -81,9 +86,25 @@ const Board = () => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
+      activationConstraint: isSearchActive
+        ? { distance: Infinity }
+        : { distance: 5 },
     }),
   );
+
+  const filteredColumns = useMemo(() => {
+    if (!isSearchActive) return columns;
+
+    const query = searchQuery.toLowerCase();
+    return columns.map((col) => ({
+      ...col,
+      tasks: col.tasks.filter(
+        (task) =>
+          task.title?.toLowerCase().includes(query) ||
+          task.description?.toLowerCase().includes(query),
+      ),
+    }));
+  }, [columns, searchQuery, isSearchActive]);
 
   const fetchBoardData = async () => {
     if (!boardId) return;
@@ -136,6 +157,7 @@ const Board = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -419,6 +441,7 @@ const Board = () => {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (isSearchActive) return;
     const activeId = event.active.id as string;
     const col = findColumnByTaskId(activeId);
     setDragSourceColumnId(col ? col.id : null);
@@ -442,6 +465,7 @@ const Board = () => {
   };
 
   const handleDragOver = (event: DragOverEvent) => {
+    if (isSearchActive) return;
     const { active, over } = event;
     if (!over) return;
 
@@ -478,6 +502,7 @@ const Board = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (isSearchActive) return;
     const { active, over } = event;
     const sourceColumnId = dragSourceColumnId;
     setDragSourceColumnId(null);
@@ -573,17 +598,46 @@ const Board = () => {
           borderColor: "divider",
         }}
       >
-        <Toolbar>
-          <IconButton edge="start" onClick={() => navigate("/")} sx={{ mr: 2 }}>
+        <Toolbar sx={{ gap: 2 }}>
+          <IconButton edge="start" onClick={() => navigate("/")}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 700, minWidth: "max-content" }}
+          >
             {boardTitle || "TaskFlow"}
           </Typography>
+
+          <TextField
+            size="small"
+            variant="outlined"
+            placeholder="Searching tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{
+              flexGrow: 1,
+              maxWidth: 400,
+              mx: 2,
+              "& .MuiOutlinedInput-root": { borderRadius: 2 },
+            }}
+          />
+
+          <Box sx={{ flexGrow: 1 }} />
+
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{ mr: 2, display: { xs: "none", sm: "block" } }}
+            sx={{ display: { xs: "none", sm: "block" } }}
           >
             {user?.email}
           </Typography>
@@ -592,7 +646,7 @@ const Board = () => {
             size="small"
             startIcon={<PeopleIcon />}
             onClick={() => setIsMembersDialogOpen(true)}
-            sx={{ mr: 2, textTransform: "none" }}
+            sx={{ textTransform: "none" }}
           >
             Members
           </Button>
@@ -606,7 +660,7 @@ const Board = () => {
             Log out
           </Button>
 
-          <IconButton onClick={toggleMode} sx={{ mr: 2 }}>
+          <IconButton onClick={toggleMode}>
             {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Toolbar>
@@ -619,16 +673,34 @@ const Board = () => {
           </Alert>
         )}
 
-        <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-          {isOwner && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setIsColumnDialogOpen(true)}
+        <Box
+          sx={{
+            mb: 3,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {isSearchActive && (
+            <Typography
+              variant="body2"
+              color="warning.main"
+              sx={{ fontWeight: 500 }}
             >
-              Add column
-            </Button>
+              Sorting is disabled during an active search.
+            </Typography>
           )}
+          <Box sx={{ ml: "auto" }}>
+            {isOwner && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setIsColumnDialogOpen(true)}
+              >
+                Add column
+              </Button>
+            )}
+          </Box>
         </Box>
 
         <DndContext
@@ -654,7 +726,7 @@ const Board = () => {
             }}
           >
             <Grid container spacing={3} wrap="nowrap">
-              {columns.map((column) => {
+              {filteredColumns.map((column) => {
                 const { tasks, ...columnData } = column;
 
                 return (

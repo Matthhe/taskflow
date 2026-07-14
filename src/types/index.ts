@@ -49,3 +49,12 @@ export interface IComment {
 export interface ICommentWithAuthor extends IComment {
   author: IProfile;
 }
+
+export interface IActivityLog {
+  id: string;
+  board_id: string;
+  user_id: string;
+  action: string;
+  created_at: string;
+  author?: IProfile;
+}

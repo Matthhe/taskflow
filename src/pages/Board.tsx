@@ -27,6 +27,9 @@ import TaskDetailsDialog from "../components/task/TaskDetailsDialog";
 import { useBoardMembers } from "../hooks/useBoardMembers";
 import PeopleIcon from "@mui/icons-material/People";
 import MembersDialog from "../components/board/MembersDialog";
+import { useActivityLog } from "../hooks/useActivityLog";
+import { BoardActivityLog } from "../components/board/BoardActivityLog";
+import HistoryIcon from "@mui/icons-material/History";
 
 import {
   DndContext,
@@ -70,7 +73,7 @@ const Board = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
-  const [deadlineFilter, setDeadlineFilter] = useState<string>("all");  
+  const [deadlineFilter, setDeadlineFilter] = useState<string>("all");
 
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
@@ -80,6 +83,8 @@ const Board = () => {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [boardOwnerId, setBoardOwnerId] = useState<string | null>(null);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
+  const { activity, logAction } = useActivityLog(boardId);
+  const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
 
   const { mode, toggleMode } = useThemeMode();
   const { notify } = useNotification();
@@ -102,7 +107,7 @@ const Board = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: isFilteringActive
-        ? { distance: Infinity }  
+        ? { distance: Infinity }
         : { distance: 5 },
     }),
   );
@@ -385,6 +390,8 @@ const Board = () => {
             : col,
         ),
       );
+
+      logAction.mutate({ userId: user.id, action: `created task "${title}"` });
     } catch (err) {
       console.error("Failed to create task:", err);
       const message =
@@ -395,6 +402,8 @@ const Board = () => {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
+      const task = columns.flatMap((c) => c.tasks).find((t) => t.id === taskId);
+
       const { error } = await supabase.from("tasks").delete().eq("id", taskId);
       if (error) throw error;
 
@@ -404,6 +413,13 @@ const Board = () => {
           tasks: col.tasks.filter((t) => t.id !== taskId),
         })),
       );
+
+      if (task && user) {
+        logAction.mutate({
+          userId: user.id,
+          action: `deleted task "${task.title}"`,
+        });
+      }
     } catch (err) {
       console.error("Failed to delete task:", err);
       const message =
@@ -434,6 +450,8 @@ const Board = () => {
 
   const handleDeleteColumn = async (columnId: string) => {
     try {
+      const column = columns.find((c) => c.id === columnId);
+
       const { error } = await supabase
         .from("columns")
         .delete()
@@ -441,6 +459,13 @@ const Board = () => {
       if (error) throw error;
 
       setColumns((prev) => prev.filter((col) => col.id !== columnId));
+
+      if (column && user) {
+        logAction.mutate({
+          userId: user.id,
+          action: `deleted column "${column.title}"`,
+        });
+      }
     } catch (err) {
       console.error("Failed to delete column:", err);
       const message =
@@ -599,6 +624,7 @@ const Board = () => {
     } else {
       const finalSourceCol = columns.find((c) => c.id === sourceColumnId);
       const finalTargetCol = columns.find((c) => c.id === overCol.id);
+      const movedTask = finalTargetCol?.tasks.find((t) => t.id === activeId);
 
       try {
         await Promise.all([
@@ -609,6 +635,13 @@ const Board = () => {
             ? updateTasksOrderInDb(finalTargetCol.id, finalTargetCol.tasks)
             : Promise.resolve(),
         ]);
+
+        if (movedTask && user) {
+          logAction.mutate({
+            userId: user.id,
+            action: `moved task "${movedTask.title}" to "${overCol.title}"`,
+          });
+        }
       } catch (err) {
         console.error("Failed to save cross-column tasks order:", err);
         const message =
@@ -705,6 +738,15 @@ const Board = () => {
             sx={{ textTransform: "none" }}
           >
             Members
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<HistoryIcon />}
+            onClick={() => setIsActivityLogOpen((prev) => !prev)}
+            sx={{ textTransform: "none" }}
+          >
+            Activity
           </Button>
           <Button
             variant="outlined"
@@ -812,51 +854,57 @@ const Board = () => {
           </Box>
         </Box>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragOver={handleDragOver}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              overflowX: "auto",
-              pb: 2,
-              "&::-webkit-scrollbar": { height: "8px" },
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.2)"
-                    : "rgba(0,0,0,0.1)",
-                borderRadius: "4px",
-              },
-            }}
-          >
-            <Grid container spacing={3} wrap="nowrap">
-              {filteredColumns.map((column) => {
-                const { tasks, ...columnData } = column;
+        <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragOver={handleDragOver}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  overflowX: "auto",
+                  pb: 2,
+                  "&::-webkit-scrollbar": { height: "8px" },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.2)"
+                        : "rgba(0,0,0,0.1)",
+                    borderRadius: "4px",
+                  },
+                }}
+              >
+                <Grid container spacing={3} wrap="nowrap">
+                  {filteredColumns.map((column) => {
+                    const { tasks, ...columnData } = column;
 
-                return (
-                  <Grid key={column.id} sx={{ flexShrink: 0 }}>
-                    <Column
-                      column={columnData}
-                      tasks={tasks}
-                      members={members}
-                      isOwner={isOwner}
-                      onAddTask={handleOpenTaskDialog}
-                      onTaskClick={handleTaskClick}
-                      onDeleteTask={handleDeleteTask}
-                      onRenameColumn={handleRenameColumn}
-                      onDeleteColumn={handleDeleteColumn}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
+                    return (
+                      <Grid key={column.id} sx={{ flexShrink: 0 }}>
+                        <Column
+                          column={columnData}
+                          tasks={tasks}
+                          members={members}
+                          isOwner={isOwner}
+                          onAddTask={handleOpenTaskDialog}
+                          onTaskClick={handleTaskClick}
+                          onDeleteTask={handleDeleteTask}
+                          onRenameColumn={handleRenameColumn}
+                          onDeleteColumn={handleDeleteColumn}
+                        />
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Box>
+            </DndContext>
           </Box>
-        </DndContext>
+
+          {isActivityLogOpen && <BoardActivityLog boardId={boardId} />}
+        </Box>
       </Container>
 
       <ColumnDialog

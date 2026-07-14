@@ -25,6 +25,9 @@ import type { ITask, TaskPriority } from "../../types";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useComments } from "../../hooks/useComments";
 import { useAuth } from "../../hooks/useAuth";
+import { useTaskAttachments } from "../../hooks/useTaskAttachments";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 interface TaskUpdates {
   title: string;
@@ -63,6 +66,34 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   const [dueDate, setDueDate] = useState("");
   const [assigneeId, setAssigneeId] = useState<string>(UNASSIGNED);
   const [isSaving, setIsSaving] = useState(false);
+
+  const { attachments, uploadFile, deleteFile, getDownloadUrl } =
+    useTaskAttachments(task?.id);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      await uploadFile.mutateAsync({ file, userId: user.id });
+    } catch (err) {
+      console.error("Failed to upload file:", err);
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleDownload = async (attachment: (typeof attachments)[number]) => {
+    try {
+      const url = await getDownloadUrl(attachment.file_path);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error("Failed to get download link:", err);
+    }
+  };
+
+  const handleDeleteAttachment = (attachment: (typeof attachments)[number]) => {
+    deleteFile.mutate(attachment);
+  };
 
   useEffect(() => {
     if (task) {
@@ -249,6 +280,61 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
               Send
             </Button>
           </Box>
+
+          <Divider />
+
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            Attachments
+          </Typography>
+
+          <List dense>
+            {attachments.map((attachment) => (
+              <ListItem
+                key={attachment.id}
+                secondaryAction={
+                  attachment.uploaded_by === user?.id ? (
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={() => handleDeleteAttachment(attachment)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  ) : null
+                }
+              >
+                <ListItemAvatar>
+                  <InsertDriveFileIcon color="action" />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{ cursor: "pointer", textDecoration: "underline" }}
+                      onClick={() => handleDownload(attachment)}
+                    >
+                      {attachment.file_name}
+                    </Typography>
+                  }
+                  secondary={
+                    attachment.uploader?.name || attachment.uploader?.email
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<AttachFileIcon />}
+            disabled={uploadFile.isPending}
+            sx={{ textTransform: "none", alignSelf: "flex-start" }}
+          >
+            {uploadFile.isPending ? "Uploading..." : "Attach file"}
+            <input type="file" hidden onChange={handleFileChange} />
+          </Button>
         </Box>
       </DialogContent>
 

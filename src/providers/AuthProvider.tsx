@@ -8,6 +8,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -26,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const { data } = await supabase.auth.getSession();
         setUser(data.session?.user ?? null);
       } catch (error) {
-        console.error("Ошибка инициализации авторизации:", error);
+        console.error("Auth initialization error:", error);
       } finally {
         setIsLoading(false);
       }
@@ -63,10 +64,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+  };
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, signUp, signInWithPassword, signOut }}
+      value={{
+        user,
+        isLoading,
+        signInWithPassword,
+        signUp,
+        signOut,
+        signInWithGoogle,
+      }}
     >
       {children}
     </AuthContext.Provider>

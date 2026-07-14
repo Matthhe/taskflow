@@ -10,10 +10,12 @@ import {
   Link,
   Paper,
   Alert,
+  Divider,
 } from "@mui/material";
+import GoogleIcon from "@mui/icons-material/Google";
 
 const Login = () => {
-  const { signInWithPassword } = useAuth();
+  const { signInWithPassword, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -32,9 +34,7 @@ const Login = () => {
 
     try {
       setIsSubmitting(true);
-
       await signInWithPassword(email, password);
-
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
@@ -43,6 +43,18 @@ const Login = () => {
       setError(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to sign in with Google";
+      setError(message);
     }
   };
 
@@ -117,6 +129,19 @@ const Login = () => {
               sx={{ mt: 1, textTransform: "none", fontWeight: "600" }}
             >
               {isSubmitting ? "Entering..." : "Enter"}
+            </Button>
+
+            <Divider sx={{ my: 1 }}>or</Divider>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              size="large"
+              startIcon={<GoogleIcon />}
+              onClick={handleGoogleSignIn}
+              sx={{ textTransform: "none" }}
+            >
+              Continue with Google
             </Button>
 
             <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>

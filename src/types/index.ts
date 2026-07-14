@@ -58,3 +58,14 @@ export interface IActivityLog {
   created_at: string;
   author?: IProfile;
 }
+
+export interface ITaskAttachment {
+  id: string;
+  task_id: string;
+  uploaded_by: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  created_at: string;
+  uploader?: IProfile;
+}

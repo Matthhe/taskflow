@@ -83,7 +83,7 @@ const Board = () => {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [boardOwnerId, setBoardOwnerId] = useState<string | null>(null);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
-  const { activity, logAction } = useActivityLog(boardId);
+  const { logAction } = useActivityLog(boardId);
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
 
   const { mode, toggleMode } = useThemeMode();

@@ -3,8 +3,6 @@ import { supabase } from "../services/supabase";
 import { useAuth } from "./useAuth";
 import type { IBoardWithRole } from "../types";
 
-const DEFAULT_COLUMNS = ["To Do", "In Progress", "Done"];
-
 export const useBoards = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -29,28 +27,11 @@ export const useBoards = () => {
 
   const createBoard = useMutation({
     mutationFn: async (title: string) => {
-      const { data: board, error: boardError } = await supabase
-        .from("boards")
-        .insert([{ title, owner_id: user!.id }])
-        .select()
-        .single();
-      if (boardError) throw boardError;
-
-      const { error: memberError } = await supabase
-        .from("board_members")
-        .insert([{ board_id: board.id, user_id: user!.id, role: "owner" }]);
-      if (memberError) throw memberError;
-
-      const { error: columnsError } = await supabase.from("columns").insert(
-        DEFAULT_COLUMNS.map((colTitle, index) => ({
-          board_id: board.id,
-          title: colTitle,
-          position: index,
-        })),
-      );
-      if (columnsError) throw columnsError;
-
-      return board;
+      const { data, error } = await supabase.rpc("create_board_with_defaults", {
+        _title: title,
+      });
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards", user?.id] });

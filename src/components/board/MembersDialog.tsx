@@ -24,14 +24,14 @@ interface MembersDialogProps {
   open: boolean;
   onClose: () => void;
   boardId: string | undefined;
-  isOwner: boolean;
+  canManageMembers: boolean;
 }
 
 const MembersDialog: React.FC<MembersDialogProps> = ({
   open,
   onClose,
   boardId,
-  isOwner,
+  canManageMembers,
 }) => {
   const { members, inviteMember, removeMember } = useBoardMembers(boardId);
   const { notify } = useNotification();
@@ -69,7 +69,7 @@ const MembersDialog: React.FC<MembersDialogProps> = ({
       <DialogTitle sx={{ fontWeight: 600 }}>Board members</DialogTitle>
 
       <DialogContent>
-        {isOwner && (
+        {canManageMembers && (
           <Box sx={{ display: "flex", gap: 1, mb: 2, mt: 1 }}>
             <TextField
               fullWidth
@@ -97,7 +97,7 @@ const MembersDialog: React.FC<MembersDialogProps> = ({
             <ListItem
               key={member.id}
               secondaryAction={
-                isOwner && member.role !== "owner" ? (
+                canManageMembers && member.role !== "owner" ? (
                   <IconButton
                     edge="end"
                     onClick={() => handleRemove(member.id)}
@@ -120,7 +120,7 @@ const MembersDialog: React.FC<MembersDialogProps> = ({
                 label={member.role}
                 size="small"
                 color={member.role === "owner" ? "primary" : "default"}
-                sx={{ mr: isOwner && member.role !== "owner" ? 5 : 0 }}
+                sx={{ mr: canManageMembers && member.role !== "owner" ? 5 : 0 }}
               />
             </ListItem>
           ))}

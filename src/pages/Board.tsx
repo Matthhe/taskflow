@@ -54,6 +54,7 @@ import type { ITask, IColumn } from "../types";
 import { useThemeMode } from "../providers/ThemeProviderWrapper";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
+import { getBoardPermissions } from "../utils/permissions";
 
 interface ColumnWithTasks extends IColumn {
   tasks: ITask[];
@@ -89,7 +90,9 @@ const Board = () => {
   const { mode, toggleMode } = useThemeMode();
   const { notify } = useNotification();
 
-  const isOwner = user?.id === boardOwnerId;
+  const permissions = getBoardPermissions(
+    boardOwnerId ? (user?.id === boardOwnerId ? "owner" : "member") : null,
+  );
 
   const isFilteringActive = useMemo(() => {
     return (
@@ -844,7 +847,7 @@ const Board = () => {
           )}
 
           <Box sx={{ ml: "auto" }}>
-            {isOwner && (
+            {permissions.canManageColumns && (
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -890,7 +893,7 @@ const Board = () => {
                           column={columnData}
                           tasks={tasks}
                           members={members}
-                          isOwner={isOwner}
+                          permissions={permissions}
                           onAddTask={handleOpenTaskDialog}
                           onTaskClick={handleTaskClick}
                           onDeleteTask={handleDeleteTask}
@@ -930,7 +933,7 @@ const Board = () => {
         open={isMembersDialogOpen}
         onClose={() => setIsMembersDialogOpen(false)}
         boardId={boardId}
-        isOwner={user?.id === boardOwnerId}
+        canManageMembers={permissions.canManageMembers}
       />
     </Box>
   );

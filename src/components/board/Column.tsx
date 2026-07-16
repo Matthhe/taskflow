@@ -16,12 +16,13 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import type { BoardPermissions } from "../../utils/permissions";
 
 interface ColumnProps {
   column: IColumn;
   tasks: ITask[];
   members: IProfile[];
-  isOwner: boolean;
+  permissions: BoardPermissions;
   onAddTask?: (columnId: string) => void;
   onTaskClick?: (task: ITask) => void;
   onDeleteTask?: (taskId: string) => void;
@@ -33,7 +34,7 @@ const Column: React.FC<ColumnProps> = ({
   column,
   tasks,
   members,
-  isOwner,
+  permissions,
   onAddTask,
   onTaskClick,
   onDeleteTask,
@@ -111,16 +112,16 @@ const Column: React.FC<ColumnProps> = ({
         >
           <Typography
             variant="h6"
-            onClick={isOwner ? startEditing : undefined}
+            onClick={permissions.canManageColumns ? startEditing : undefined}
             sx={{
               fontWeight: 700,
-              cursor: isOwner ? "pointer" : "default",
-              "&:hover": isOwner ? { opacity: 0.7 } : {},
+              cursor: permissions.canManageColumns ? "pointer" : "default",
+              "&:hover": permissions.canManageColumns ? { opacity: 0.7 } : {},
             }}
           >
             {column.title} ({tasks.length})
           </Typography>
-          {isOwner && (
+          {permissions.canManageColumns && (
             <IconButton size="small" onClick={handleDeleteClick}>
               <DeleteIcon fontSize="small" />
             </IconButton>
@@ -160,13 +161,13 @@ const Column: React.FC<ColumnProps> = ({
                 task={task}
                 assignee={members.find((m) => m.id === task.assignee_id)}
                 onClick={onTaskClick}
-                onDelete={isOwner ? onDeleteTask : undefined}
+                onDelete={permissions.canDeleteTask ? onDeleteTask : undefined}
               />
             ))}
           </Box>
         </SortableContext>
 
-        {isOwner && (
+        {permissions.canCreateTask && (
           <Button
             fullWidth
             startIcon={<AddIcon />}

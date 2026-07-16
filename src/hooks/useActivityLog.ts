@@ -16,7 +16,10 @@ export const useActivityLog = (boardId: string | undefined) => {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return (data || []).map((row: any) => ({ ...row, author: row.profiles }));
+      return (data || []).map((row) => ({
+        ...row,
+        author: row.profiles ?? undefined,
+      }));
     },
   });
 
@@ -28,6 +31,7 @@ export const useActivityLog = (boardId: string | undefined) => {
       userId: string;
       action: string;
     }) => {
+      if (!boardId) return;
       const { error } = await supabase
         .from("activity_log")
         .insert([{ board_id: boardId, user_id: userId, action }]);

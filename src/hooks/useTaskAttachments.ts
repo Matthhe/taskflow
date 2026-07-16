@@ -19,15 +19,16 @@ export const useTaskAttachments = (taskId: string | undefined) => {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      return (data || []).map((row) => ({
         ...row,
-        uploader: row.profiles,
+        uploader: row.profiles ?? undefined,
       }));
     },
   });
 
   const uploadFile = useMutation({
     mutationFn: async ({ file, userId }: { file: File; userId: string }) => {
+      if (!taskId) return;
       const filePath = `${taskId}/${Date.now()}-${file.name}`;
 
       const { error: uploadError } = await supabase.storage

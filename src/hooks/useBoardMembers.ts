@@ -20,15 +20,16 @@ export const useBoardMembers = (boardId: string | undefined) => {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      return (data || []).map((row) => ({
         ...row.profiles,
-        role: row.role,
+        role: row.role as "owner" | "member",
       }));
     },
   });
 
   const inviteMember = useMutation({
     mutationFn: async (email: string) => {
+      if (!boardId) return;
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
@@ -42,7 +43,7 @@ export const useBoardMembers = (boardId: string | undefined) => {
 
       const { error: insertError } = await supabase
         .from("board_members")
-        .insert([{ board_id: boardId, user_id: profile.id, role: "member" }]);
+        .insert([{ board_id: boardId!, user_id: profile.id, role: "member" }]);
 
       if (insertError) {
         if (insertError.code === "23505") {
@@ -58,10 +59,11 @@ export const useBoardMembers = (boardId: string | undefined) => {
 
   const removeMember = useMutation({
     mutationFn: async (userId: string) => {
+      if (!boardId) return;
       const { error } = await supabase
         .from("board_members")
         .delete()
-        .eq("board_id", boardId)
+        .eq("board_id", boardId!)
         .eq("user_id", userId);
       if (error) throw error;
     },

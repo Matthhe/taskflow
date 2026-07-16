@@ -17,9 +17,9 @@ export const useComments = (taskId: string | undefined) => {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
+      return (data || []).map((row) => ({
         ...row,
-        author: row.profiles,
+        author: row.profiles ?? undefined,
       }));
     },
   });
@@ -32,6 +32,7 @@ export const useComments = (taskId: string | undefined) => {
       userId: string;
       content: string;
     }) => {
+      if (!taskId) return;
       const { error } = await supabase
         .from("comments")
         .insert([{ task_id: taskId, user_id: userId, content }]);

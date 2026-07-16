@@ -2,14 +2,14 @@ export interface IProfile {
   id: string;
   name: string | null;
   avatar_url: string | null;
-  email: string;
+  email: string | null;
 }
 
 export interface IBoard {
   id: string;
   title: string;
   owner_id: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface IBoardWithRole extends IBoard {
@@ -30,12 +30,12 @@ export interface ITask {
   column_id: string;
   title: string;
   description: string | null;
-  priority: TaskPriority;
+  priority: TaskPriority | null;
   due_date: string | null;
   assignee_id: string | null;
   position: number;
   created_by: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface IComment {
@@ -43,11 +43,11 @@ export interface IComment {
   task_id: string;
   user_id: string;
   content: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface ICommentWithAuthor extends IComment {
-  author: IProfile;
+  author?: IProfile;
 }
 
 export interface IActivityLog {
@@ -55,7 +55,11 @@ export interface IActivityLog {
   board_id: string;
   user_id: string;
   action: string;
-  created_at: string;
+  event_type: string | null;
+  task_id: string | null;
+  from_column_id: string | null;
+  to_column_id: string | null;
+  created_at: string | null;
   author?: IProfile;
 }
 
@@ -66,6 +70,6 @@ export interface ITaskAttachment {
   file_name: string;
   file_path: string;
   file_size: number | null;
-  created_at: string;
+  created_at: string | null;
   uploader?: IProfile;
 }

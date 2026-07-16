@@ -198,7 +198,9 @@ const Board = () => {
       const formattedColumns: ColumnWithTasks[] = (colsData || []).map(
         (col) => ({
           ...col,
-          tasks: (tasksData || []).filter((task) => task.column_id === col.id),
+          tasks: (tasksData || []).filter(
+            (task) => task.column_id === col.id,
+          ) as ITask[],
         }),
       );
 
@@ -386,7 +388,7 @@ const Board = () => {
       setColumns(
         columns.map((col) =>
           col.id === activeColumnId
-            ? { ...col, tasks: [...col.tasks, data] }
+            ? { ...col, tasks: [...col.tasks, data as ITask] }
             : col,
         ),
       );
@@ -507,7 +509,7 @@ const Board = () => {
         prev.map((col) => ({
           ...col,
           tasks: col.tasks.map((t) =>
-            t.id === taskId ? { ...t, ...data } : t,
+            t.id === taskId ? { ...t, ...(data as ITask) } : t,
           ),
         })),
       );

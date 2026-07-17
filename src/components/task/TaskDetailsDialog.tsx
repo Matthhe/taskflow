@@ -28,6 +28,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useTaskAttachments } from "../../hooks/useTaskAttachments";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { useNotification } from "../../hooks/useNotification";
 
 interface TaskUpdates {
   title: string;
@@ -59,6 +60,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   const { user } = useAuth();
   const { comments, addComment, deleteComment } = useComments(task?.id);
   const [commentText, setCommentText] = useState("");
+  const { notify } = useNotification();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -77,11 +79,13 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
       await uploadFile.mutateAsync({ file, userId: user.id });
     } catch (err) {
       console.error("Failed to upload file:", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to upload file";
+      notify(message, "error");
     } finally {
       e.target.value = "";
     }
   };
-
   const handleDownload = async (attachment: (typeof attachments)[number]) => {
     try {
       const url = await getDownloadUrl(attachment.file_path);
@@ -99,7 +103,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
     if (task) {
       setTitle(task.title);
       setDescription(task.description || "");
-      setPriority(task.priority);
+      setPriority(task.priority ?? "medium");
       setDueDate(task.due_date || "");
       setAssigneeId(task.assignee_id || UNASSIGNED);
     }
@@ -254,7 +258,9 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                         variant="caption"
                         color="text.secondary"
                       >
-                        {new Date(comment.created_at).toLocaleString()}
+                        {comment.created_at
+                          ? new Date(comment.created_at).toLocaleString()
+                          : ""}
                       </Typography>
                     </>
                   }

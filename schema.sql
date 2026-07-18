@@ -333,6 +333,23 @@ create trigger on_task_moved
   after update of column_id on tasks
   for each row execute function public.log_task_move();
 
+create or replace function public.log_column_deleted()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into activity_log (board_id, user_id, action, event_type, from_column_id)
+  values (old.board_id, auth.uid(), 'deleted column "' || old.title || '"', 'column_deleted', old.id);
+  return old;
+end;
+$$;
+
+create trigger on_column_deleted
+  before delete on columns
+  for each row execute function public.log_column_deleted();
+
 create or replace function public.create_board_with_defaults(_title text)
 returns boards
 language plpgsql

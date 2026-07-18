@@ -3,16 +3,11 @@ import type { Dispatch, SetStateAction } from "react";
 import { supabase } from "../services/supabase";
 import { useNotification } from "./useNotification";
 import type { ColumnWithTasks } from "./useBoard";
-import type { useActivityLog } from "./useActivityLog";
-
-type LogAction = ReturnType<typeof useActivityLog>["logAction"];
 
 export const useBoardColumns = (
   boardId: string | undefined,
   columns: ColumnWithTasks[],
   setColumns: Dispatch<SetStateAction<ColumnWithTasks[]>>,
-  logAction: LogAction,
-  userId: string | undefined,
 ) => {
   const { notify } = useNotification();
 
@@ -63,7 +58,6 @@ export const useBoardColumns = (
   const handleDeleteColumn = useCallback(
     async (columnId: string) => {
       try {
-        const column = columns.find((c) => c.id === columnId);
         const { error } = await supabase
           .from("columns")
           .delete()
@@ -71,14 +65,6 @@ export const useBoardColumns = (
         if (error) throw error;
 
         setColumns((prev) => prev.filter((col) => col.id !== columnId));
-
-        // Columns have no server-side activity trigger, so this stays client-side.
-        if (column && userId) {
-          logAction.mutate({
-            userId,
-            action: `deleted column "${column.title}"`,
-          });
-        }
       } catch (err) {
         console.error("Failed to delete column:", err);
         const message =
@@ -86,7 +72,7 @@ export const useBoardColumns = (
         notify(message, "error");
       }
     },
-    [columns, userId, logAction, setColumns, notify],
+    [setColumns, notify],
   );
 
   return { handleCreateColumn, handleRenameColumn, handleDeleteColumn };

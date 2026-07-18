@@ -4,7 +4,6 @@ import { Container, Box, CircularProgress, Alert } from "@mui/material";
 
 import { useAuth } from "../hooks/useAuth";
 import { useBoardMembers } from "../hooks/useBoardMembers";
-import { useActivityLog } from "../hooks/useActivityLog";
 import { useBoard } from "../hooks/useBoard";
 import { useBoardRealtime } from "../hooks/useBoardRealtime";
 import { useBoardColumns } from "../hooks/useBoardColumns";
@@ -32,7 +31,6 @@ const Board = () => {
   const { mode, toggleMode } = useThemeMode();
 
   const { members } = useBoardMembers(boardId);
-  const { logAction } = useActivityLog(boardId);
 
   const { columns, setColumns, boardTitle, boardOwnerId, loading, error } =
     useBoard(boardId, !!user);
@@ -101,7 +99,7 @@ const Board = () => {
   }, [columns, searchQuery, priorityFilter, assigneeFilter, deadlineFilter]);
 
   const { handleCreateColumn, handleRenameColumn, handleDeleteColumn } =
-    useBoardColumns(boardId, columns, setColumns, logAction, user?.id);
+    useBoardColumns(boardId, columns, setColumns);
 
   const { handleCreateTask, handleDeleteTask, handleUpdateTask } =
     useBoardTasks(columns, setColumns, user?.id);

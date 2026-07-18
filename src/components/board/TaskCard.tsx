@@ -22,7 +22,7 @@ interface TaskCardProps {
   onDelete?: (taskId: string) => void;
 }
 
-const priorityColor = (priority: string) => {
+const priorityColor = (priority: string | null) => {
   if (priority === "high") return "error";
   if (priority === "medium") return "warning";
   return "default";
@@ -74,7 +74,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         cursor: "grab",
         position: "relative",
         "&:active": { cursor: "grabbing" },
-        "&:hover .task-delete-btn": { opacity: 1 },
       }}
     >
       <CardContent sx={{ "&:last-child": { pb: 2 }, p: 2 }}>
@@ -97,7 +96,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               className="task-delete-btn"
               size="small"
               onClick={handleDeleteClick}
-              sx={{ opacity: 0, transition: "opacity 0.15s", p: 0.5, ml: 1 }}
+              sx={{ p: 0.5, ml: 1 }}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>

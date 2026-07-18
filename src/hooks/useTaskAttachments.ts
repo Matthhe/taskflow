@@ -1,41 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../services/supabase";
 import type { ITaskAttachment } from "../types";
+import { sanitizeFileName, validateFile } from "../utils/filaValidation";
 
 const BUCKET = "task-attachments";
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const ALLOWED_MIME_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "image/webp",
-  "application/pdf",
-  "text/plain",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/zip",
-];
-
-const sanitizeFileName = (name: string) => {
-  const lastDot = name.lastIndexOf(".");
-  const ext = lastDot >= 0 ? name.slice(lastDot) : "";
-  const base = (lastDot >= 0 ? name.slice(0, lastDot) : name)
-    .normalize("NFKD")
-    .replace(/[^a-zA-Z0-9._-]/g, "_")
-    .slice(0, 100);
-  return `${base || "file"}${ext.replace(/[^a-zA-Z0-9.]/g, "")}`;
-};
-
-const validateFile = (file: File) => {
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error("File is too large. Maximum size is 10 MB.");
-  }
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    throw new Error("This file type is not allowed.");
-  }
-};
 
 export const useTaskAttachments = (taskId: string | undefined) => {
   const queryClient = useQueryClient();

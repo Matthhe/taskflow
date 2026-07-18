@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../services/supabase";
-import { type ICommentWithAuthor } from "../types";
+import { commentsService } from "../services/comments.service";
 
 export const useComments = (taskId: string | undefined) => {
   const queryClient = useQueryClient();
@@ -8,20 +7,7 @@ export const useComments = (taskId: string | undefined) => {
   const commentsQuery = useQuery({
     queryKey: ["comments", taskId],
     enabled: !!taskId,
-    queryFn: async (): Promise<ICommentWithAuthor[]> => {
-      const { data, error } = await supabase
-        .from("comments")
-        .select("*, profiles(id, email, name, avatar_url)")
-        .eq("task_id", taskId!)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      return (data || []).map((row) => ({
-        ...row,
-        author: row.profiles ?? undefined,
-      }));
-    },
+    queryFn: () => commentsService.listForTask(taskId!),
   });
 
   const addComment = useMutation({
@@ -33,10 +19,7 @@ export const useComments = (taskId: string | undefined) => {
       content: string;
     }) => {
       if (!taskId) return;
-      const { error } = await supabase
-        .from("comments")
-        .insert([{ task_id: taskId, user_id: userId, content }]);
-      if (error) throw error;
+      await commentsService.add(taskId, userId, content);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", taskId] });
@@ -44,13 +27,7 @@ export const useComments = (taskId: string | undefined) => {
   });
 
   const deleteComment = useMutation({
-    mutationFn: async (commentId: string) => {
-      const { error } = await supabase
-        .from("comments")
-        .delete()
-        .eq("id", commentId);
-      if (error) throw error;
-    },
+    mutationFn: (commentId: string) => commentsService.remove(commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", taskId] });
     },

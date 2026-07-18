@@ -7,7 +7,7 @@ import type {
   DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { supabase } from "../services/supabase";
+import { tasksService } from "../services/tasks.service";
 import { useNotification } from "./useNotification";
 import type { ColumnWithTasks } from "./useBoard";
 import type { ITask } from "../types";
@@ -44,15 +44,8 @@ export const useTaskDnD = (
   );
 
   const updateTasksOrderInDb = useCallback(
-    async (columnId: string, updatedTasks: ITask[]) => {
-      const promises = updatedTasks.map((task, index) =>
-        supabase
-          .from("tasks")
-          .update({ position: index, column_id: columnId })
-          .eq("id", task.id),
-      );
-      await Promise.all(promises);
-    },
+    (columnId: string, updatedTasks: ITask[]) =>
+      tasksService.reorder(columnId, updatedTasks),
     [],
   );
 

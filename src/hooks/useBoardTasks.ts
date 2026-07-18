@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { supabase } from "../services/supabase";
+import { tasksService } from "../services/tasks.service";
 import { useNotification } from "./useNotification";
 import type { ColumnWithTasks } from "./useBoard";
-import type { ITask, TaskPriority } from "../types";
+import type { ITask } from "../types";
 
 interface TaskUpdates {
   title: string;
@@ -21,8 +21,7 @@ export const useBoardTasks = (
   const { notify } = useNotification();
 
   // NOTE: task create/delete/move activity log entries are written by
-  // database triggers (see schema.sql), not from here — this avoids
-  // duplicated or forgeable log entries.
+  // database triggers (see schema.sql), not from here.
 
   const handleCreateTask = useCallback(
     async (
@@ -36,26 +35,19 @@ export const useBoardTasks = (
         const column = columns.find((c) => c.id === activeColumnId);
         const position = column ? column.tasks.length : 0;
 
-        const { data, error } = await supabase
-          .from("tasks")
-          .insert([
-            {
-              title,
-              description,
-              priority: priority as TaskPriority,
-              column_id: activeColumnId,
-              created_by: userId,
-              position,
-            },
-          ])
-          .select()
-          .single();
-        if (error) throw error;
+        const newTask = await tasksService.create({
+          title,
+          description,
+          priority,
+          column_id: activeColumnId,
+          created_by: userId,
+          position,
+        });
 
         setColumns((prev) =>
           prev.map((col) =>
             col.id === activeColumnId
-              ? { ...col, tasks: [...col.tasks, data as ITask] }
+              ? { ...col, tasks: [...col.tasks, newTask] }
               : col,
           ),
         );
@@ -72,12 +64,7 @@ export const useBoardTasks = (
   const handleDeleteTask = useCallback(
     async (taskId: string) => {
       try {
-        const { error } = await supabase
-          .from("tasks")
-          .delete()
-          .eq("id", taskId);
-        if (error) throw error;
-
+        await tasksService.remove(taskId);
         setColumns((prev) =>
           prev.map((col) => ({
             ...col,
@@ -97,20 +84,11 @@ export const useBoardTasks = (
   const handleUpdateTask = useCallback(
     async (taskId: string, updates: TaskUpdates) => {
       try {
-        const { data, error } = await supabase
-          .from("tasks")
-          .update(updates)
-          .eq("id", taskId)
-          .select()
-          .single();
-        if (error) throw error;
-
+        const updated: ITask = await tasksService.update(taskId, updates);
         setColumns((prev) =>
           prev.map((col) => ({
             ...col,
-            tasks: col.tasks.map((t) =>
-              t.id === taskId ? { ...t, ...(data as ITask) } : t,
-            ),
+            tasks: col.tasks.map((t) => (t.id === taskId ? updated : t)),
           })),
         );
       } catch (err) {

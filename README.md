@@ -40,15 +40,15 @@ npm run dev
 
 ## Tech stack
 
-| Category | Technology |
-|---|---|
-| Framework | React 18+ (Vite) |
-| Language | TypeScript |
-| Backend / DB | Supabase (Postgres, Auth, Realtime, Storage) |
-| Styling | MUI (Material UI) |
-| Drag & Drop | @dnd-kit |
-| Routing | React Router v6 |
-| State management | React Query + Context API |
+| Category         | Technology                                   |
+| ---------------- | -------------------------------------------- |
+| Framework        | React 18+ (Vite)                             |
+| Language         | TypeScript                                   |
+| Backend / DB     | Supabase (Postgres, Auth, Realtime, Storage) |
+| Styling          | MUI (Material UI)                            |
+| Drag & Drop      | @dnd-kit                                     |
+| Routing          | React Router v6                              |
+| State management | React Query + Context API                    |
 
 ## Database & security notes
 
@@ -59,21 +59,24 @@ npm run dev
 
 ## Implemented levels
 
-### Level 1 — MVP 
+### Level 1 — MVP
+
 - Email/password authentication, protected routes
 - Boards: list, create, delete, open
 - Columns: create, rename, delete, 3 default columns on board creation
 - Tasks: create, delete, drag-and-drop between columns, reordering within a column
 - Responsive UI, loading states, error handling with toast notifications
 
-### Level 2 — Full functionality 
+### Level 2 — Full functionality
+
 - **Task details** — modal with title, description, priority, due date, and assignee (selected from board members)
 - **Comments** — add/delete comments on tasks, with author and timestamp
 - **Realtime** — live updates via Supabase Realtime on `tasks` and `columns` tables (no reload needed)
 - **Shared access** — invite registered users to a board by email, owner/member roles, member management
 - **User profile** — name and avatar (via URL), shown on task cards and comments
 
-### Level 3 — Bonus 
+### Level 3 — Bonus
+
 - Task filtering by priority, assignee, and deadline, plus search by title/description
 - Server-side activity log (e.g. "moved a task")
 - File attachments on tasks via Supabase Storage (with MIME/size validation and orphan cleanup)

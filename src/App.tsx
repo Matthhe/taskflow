@@ -8,46 +8,49 @@ import BoardsList from "./pages/Boardslist";
 import { NotificationProvider } from "./providers/NotificationProvider";
 import Profile from "./pages/Profile";
 import { ThemeProviderWrapper } from "./providers/ThemeProviderWrapper";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function App() {
   return (
-    <ThemeProviderWrapper>
-      <NotificationProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <BoardsList />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/board/:boardId"
-                element={
-                  <ProtectedRoute>
-                    <Board />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </NotificationProvider>
-    </ThemeProviderWrapper>
+    <ErrorBoundary>
+      <ThemeProviderWrapper>
+        <NotificationProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <BoardsList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/board/:boardId"
+                  element={
+                    <ProtectedRoute>
+                      <Board />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </NotificationProvider>
+      </ThemeProviderWrapper>
+    </ErrorBoundary>
   );
 }
 

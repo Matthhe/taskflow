@@ -70,6 +70,77 @@ create table activity_log (
   created_at      timestamptz default now()
 );
 
+create or replace function public.log_column_deleted()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (select 1 from boards where id = old.board_id) then
+    insert into activity_log (board_id, user_id, action, event_type, from_column_id)
+    values (old.board_id, auth.uid(), 'deleted column "' || old.title || '"', 'column_deleted', old.id);
+  end if;
+  return old;
+end;
+$$;
+
+create or replace function public.log_task_created()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_board_id uuid;
+begin
+  select board_id into v_board_id from columns where id = new.column_id;
+  if v_board_id is not null then
+    insert into activity_log (board_id, user_id, action, event_type, task_id, to_column_id)
+    values (v_board_id, auth.uid(), 'created a task', 'task_created', new.id, new.column_id);
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.log_task_deleted()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_board_id uuid;
+begin
+  select board_id into v_board_id from columns where id = old.column_id;
+  if v_board_id is not null then
+    insert into activity_log (board_id, user_id, action, event_type, task_id, from_column_id)
+    values (v_board_id, auth.uid(), 'deleted a task', 'task_deleted', old.id, old.column_id);
+  end if;
+  return old;
+end;
+$$;
+
+create or replace function public.log_task_move()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_board_id uuid;
+begin
+  if old.column_id is distinct from new.column_id then
+    select board_id into v_board_id from columns where id = new.column_id;
+    if v_board_id is not null then
+      insert into activity_log (board_id, user_id, action, event_type, task_id, from_column_id, to_column_id)
+      values (v_board_id, auth.uid(), 'moved a task', 'task_moved', new.id, old.column_id, new.column_id);
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
 alter table boards enable row level security;
 alter table board_members enable row level security;
 alter table columns enable row level security;
@@ -78,6 +149,16 @@ alter table comments enable row level security;
 alter table profiles enable row level security;
 alter table task_attachments enable row level security;
 alter table activity_log enable row level security;
+
+alter table activity_log
+  drop constraint activity_log_from_column_id_fkey,
+  add constraint activity_log_from_column_id_fkey
+    foreign key (from_column_id) references columns(id) on delete set null;
+
+alter table activity_log
+  drop constraint activity_log_to_column_id_fkey,
+  add constraint activity_log_to_column_id_fkey
+    foreign key (to_column_id) references columns(id) on delete set null;
 
 create or replace function public.is_board_member(_board_id uuid)
 returns boolean

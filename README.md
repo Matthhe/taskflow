@@ -40,15 +40,15 @@ npm run dev
 
 ## Tech stack
 
-| Category | Technology |
-|---|---|
-| Framework | React 18+ (Vite) |
-| Language | TypeScript |
-| Backend / DB | Supabase (Postgres, Auth, Realtime, Storage) |
-| Styling | MUI (Material UI) |
-| Drag & Drop | @dnd-kit |
-| Routing | React Router v6 |
-| State management | React Query + Context API |
+| Category         | Technology                                   |
+| ---------------- | -------------------------------------------- |
+| Framework        | React 18+ (Vite)                             |
+| Language         | TypeScript                                   |
+| Backend / DB     | Supabase (Postgres, Auth, Realtime, Storage) |
+| Styling          | MUI (Material UI)                            |
+| Drag & Drop      | @dnd-kit                                     |
+| Routing          | React Router v6                              |
+| State management | React Query + Context API                    |
 
 ## Database & security notes
 
@@ -68,21 +68,24 @@ npm run dev
 
 ## Implemented levels
 
-### Level 1 — MVP 
+### Level 1 — MVP
+
 - Email/password authentication, protected routes
 - Boards: list, create, delete, open
 - Columns: create, rename, delete, 3 default columns on board creation
 - Tasks: create, delete, drag-and-drop between columns, reordering within a column
 - Responsive UI, loading states, error handling with toast notifications
 
-### Level 2 — Full functionality 
+### Level 2 — Full functionality
+
 - **Task details** — modal with title, description, priority, due date, and assignee (selected from board members)
 - **Comments** — add/delete comments on tasks, with author and timestamp
 - **Realtime** — live updates via Supabase Realtime on `tasks` and `columns` tables (no reload needed)
 - **Shared access** — invite registered users to a board by email, owner/member roles, member management
 - **User profile** — name and avatar (via URL), shown on task cards and comments
 
-### Level 3 — Bonus 
+### Level 3 — Bonus
+
 - Task filtering by priority, assignee, and deadline, plus search by title/description
 - Server-side activity log (e.g. "moved a task")
 - File attachments on tasks via Supabase Storage (with MIME/size validation and orphan cleanup)
@@ -99,6 +102,7 @@ npm test
 ```
 
 Covered by unit/integration tests (Vitest):
+
 - Permission rules (`getBoardPermissions`)
 - Task reordering and cross-column move logic
 - Task filtering (search, priority, assignee, deadline)
@@ -106,6 +110,7 @@ Covered by unit/integration tests (Vitest):
 - Board creation flow, via a mocked Supabase RPC call
 
 Not covered (would require a dedicated test Supabase project and/or a browser automation tool, out of scope for this submission):
+
 - RLS policy tests against a live Postgres instance
 - End-to-end smoke test (login → create board → create task → drag)
 
@@ -114,4 +119,3 @@ Not covered (would require a dedicated test Supabase project and/or a browser au
 - Invitations for users who aren't registered yet (currently only registered users with an existing profile can be invited)
 - Server-side activity logging for column create/rename (currently only task events and column deletion go through DB triggers)
 - Smoother drag-and-drop visuals using `DragOverlay` from `@dnd-kit`
-- RLS policy tests and an end-to-end smoke test (see Testing section above)

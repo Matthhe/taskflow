@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMediaQuery, useTheme, Tooltip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -35,6 +36,8 @@ const BoardsList = () => {
   const { boards, isLoading, isError, createBoard, deleteBoard } = useBoards();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -83,25 +86,48 @@ const BoardsList = () => {
           borderColor: "divider",
         }}
       >
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+        <Toolbar sx={{ gap: 1, flexWrap: "wrap", py: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              flexGrow: 1,
+              fontWeight: 700,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             TaskFlow
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-            {user?.email}
-          </Typography>
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={() => signOut()}
-            sx={{ textTransform: "none" }}
-          >
-            Log out
-          </Button>
-          <IconButton onClick={() => navigate("/profile")} sx={{ mr: 1 }}>
+
+          {!isMobile && (
+            <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+              {user?.email}
+            </Typography>
+          )}
+
+          {isMobile ? (
+            <Tooltip title="Log out">
+              <IconButton size="small" color="error" onClick={() => signOut()}>
+                <LogoutIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Button
+              startIcon={<LogoutIcon />}
+              onClick={() => signOut()}
+              sx={{ textTransform: "none" }}
+            >
+              Log out
+            </Button>
+          )}
+
+          <IconButton onClick={() => navigate("/profile")}>
             <PersonIcon />
           </IconButton>
 
-          <IconButton onClick={toggleMode} sx={{ mr: 2 }}>
+          <IconButton onClick={toggleMode}>
             {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Toolbar>

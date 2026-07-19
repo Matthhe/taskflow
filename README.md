@@ -21,7 +21,7 @@ This account is separate from the automated RLS test accounts, so it's safe to f
 ![TaskFlow boardlists view](./screenshots/Boardlist.png)
 ![TaskFlow dark mode view](./screenshots/DarkMode.png)
 ![TaskFlow task details view](./screenshots/TaskDetails.png)
-![TaskFlow mobile view](./screenshots/ModileView.png)
+![TaskFlow mobile view](./screenshots/MobileView.png)
 
 ## Getting started
 

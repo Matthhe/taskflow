@@ -7,6 +7,22 @@ TaskFlow is a Jira-lite kanban board application for managing tasks across board
 - **Deployed app:** https://taskflow-mauve-one-63.vercel.app/login
 - **Repository:** https://github.com/Matthhe/taskflow
 
+## Demo access
+
+You can log in with a pre-created demo account to explore the app with sample data:
+- **Email:** demo@gmail.com
+- **Password:** 12345678
+
+This account is separate from the automated RLS test accounts, so it's safe to freely create/edit/delete boards and tasks while reviewing.
+
+## Screenshots
+
+![TaskFlow board view](./screenshots/Board.png)
+![TaskFlow boardlists view](./screenshots/Boardlist.png)
+![TaskFlow dark mode view](./screenshots/DarkMode.png)
+![TaskFlow task details view](./screenshots/TaskDetails.png)
+![TaskFlow mobile view](./screenshots/ModileView.png)
+
 ## Getting started
 
 ### 1. Clone and install
